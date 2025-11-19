@@ -5,17 +5,23 @@ on: [push]
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    # BURADAKİ FAZLALIKLARI SİLDİK, ARTIK BAĞLANTI KOPMAYACAK
+    
+    # --- İŞTE EKSİK OLAN PARÇA BUYDU ---
+    # Tüm adımlara "Docker'ı burada bulabilirsin" diyoruz.
+    env:
+      DOCKER_HOST: tcp://localhost:2375
+      DOCKER_TLS_CERTDIR: ""
+    # -----------------------------------
 
     steps:
       - name: Kodu Çek (Checkout)
         uses: actions/checkout@v3
 
-      # --- YENİ EKLEME: Docker Build Motorunu Hazırla ---
+      # Buildx artık yukarıdaki ENV sayesinde Docker'ı bulacak
       - name: Docker Buildx Kurulumu
         uses: docker/setup-buildx-action@v2
         with:
-          driver: docker # Dind kullandığımız için 'docker' sürücüsünü seçiyoruz
+          driver: docker # Dind için en güvenlisi budur
 
       - name: Docker Login (Gitea Registry)
         uses: docker/login-action@v2
@@ -29,8 +35,8 @@ jobs:
         with:
           context: .
           push: true
+          # Kullanıcı adını ve repo adını senin yapına göre sabitledim
           tags: git.konstantiniyye.studio/gitea_admin/dogu:latest
-          # Cache kullanarak hızı artırıyoruz
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
