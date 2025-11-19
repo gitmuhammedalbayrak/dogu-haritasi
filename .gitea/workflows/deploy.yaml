@@ -5,6 +5,14 @@ on: [push]
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest # Senin kurduğun Act Runner burada devreye girecek
+    # --- BU KISMI EKLE (BAŞLANGIÇ) ---
+    # İşçiye Docker'ın nerede olduğunu söylüyoruz
+    container:
+      image: catthehacker/ubuntu:act-latest
+    env:
+      DOCKER_HOST: tcp://localhost:2375
+      DOCKER_TLS_CERTDIR: ""
+    # --- BU KISMI EKLE (BİTİŞ) ---
     steps:
       - name: Kodu Çek (Checkout)
         uses: actions/checkout@v3
