@@ -6,8 +6,10 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     
-    # ⚠️ BURADA DOCKER_HOST TANIMLAMIYORUZ! 
-    # Runner, kendi iç mekanizmasıyla TCP üzerinden otomatik bağlanacaktır (Sizin stabil ayarınız).
+    # KRİTİK: DOCKER KOMUTUNUN YOLUNU GÖSTEREN AYAR
+    env:
+      DOCKER_HOST: tcp://localhost:2375 
+      DOCKER_TLS_CERTDIR: "" # Sertifika kontrolünü kapatır
     
     steps:
       - name: Kodu Çek (Checkout)
@@ -26,7 +28,7 @@ jobs:
           username: gitea_admin
           password: ${{ secrets.REGISTRY_TOKEN }}
 
-      # PUSH ADIMI: İmajın kimliğini (digest) çıktı olarak alıyoruz
+      # PUSH ADIMI: Digest'i çıktı olarak alıyoruz
       - name: Docker Build ve Push
         id: docker_build
         uses: docker/build-push-action@v5
@@ -36,13 +38,11 @@ jobs:
           tags: git.konstantiniyye.studio/gitea_admin/dogu:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          
 
       # -----------------------------------------------------------------
-      # CD KISMI (Düzeltilmiş)
+      # CD KISMI (Final - TLS Kontrolü Atlandı)
       # -----------------------------------------------------------------
       - name: Kubectl Binary Kurulumu
-        # ARM64 uyumlu kubectl'i kurar
         run: |
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl"
           chmod +x kubectl
@@ -56,11 +56,10 @@ jobs:
           # 2. Yeni imaj Digest'ini alır
           NEW_IMAGE_DIGEST="git.konstantiniyye.studio/gitea_admin/dogu@${{ steps.docker_build.outputs.digest }}"
 
-          # 3. Deployment'ı günceller ve yeniden başlatır
-          # ⚠️ BURADA İKİ KOMUTA DA TLS KONTROLÜNÜ DEVRE DIŞI BIRAKAN BAYRAĞI EKLİYORUZ
+          # 3. TLS kontrolünü atlayarak Deployment'ı günceller (Sizin Kubeconfig'inizdeki ayarı kullanır)
           kubectl set image deployment/dogu-haritasi web=${NEW_IMAGE_DIGEST} \
             --kubeconfig=/tmp/kubeconfig.yaml -n default \
-            --insecure-skip-tls-verify
+            --insecure-skip-tls-verify # <--- Gerekli TLS atlama bayrağı
             
           kubectl rollout restart deployment/dogu-haritasi \
             --kubeconfig=/tmp/kubeconfig.yaml -n default \
