@@ -6,17 +6,15 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     
-    # DOCKER İÇİN GEREKLİ ENV AYARLARI
-    env:
-      DOCKER_HOST: unix:///var/run/dind-socket-dir/docker.sock 
-      DOCKER_TLS_CERTDIR: ""
-
+    # ⚠️ BURADA DOCKER_HOST TANIMLAMIYORUZ! 
+    # Runner, kendi iç mekanizmasıyla TCP üzerinden otomatik bağlanacaktır (Sizin stabil ayarınız).
+    
     steps:
       - name: Kodu Çek (Checkout)
         uses: actions/checkout@v3
 
       # -----------------------------------------------------------------
-      # CI KISMI (Burada hata yok, hız için kısaltıldı)
+      # CI KISMI
       # -----------------------------------------------------------------
       - name: Docker Buildx Kurulumu
         uses: docker/setup-buildx-action@v3
@@ -28,7 +26,7 @@ jobs:
           username: gitea_admin
           password: ${{ secrets.REGISTRY_TOKEN }}
 
-      # PUSH ADIMI: Digest'i çıktı olarak alır
+      # PUSH ADIMI: İmajın kimliğini (digest) çıktı olarak alıyoruz
       - name: Docker Build ve Push
         id: docker_build
         uses: docker/build-push-action@v5
@@ -40,11 +38,14 @@ jobs:
           cache-to: type=gha,mode=max
 
       # -----------------------------------------------------------------
-      # CD KISMI (GitHub bağımsız, sadece 'run' komutları ile)
+      # CD KISMI (Kubernetes Güncellemesi - GitHub bağımsız)
       # -----------------------------------------------------------------
       - name: Kubectl Binary Kurulumu
-        # catthehacker imajında kubectl olsa da, buraya basit bir check ekledik
-        run: which kubectl || (echo "Kubectl bulunamadi, kuruluyor..." && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl" && chmod +x kubectl && sudo mv kubectl /usr/local/bin/)
+        # ARM64 uyumlu kubectl'i kurar (Aksiyon hatası yerine run komutu kullanıldı)
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
 
       - name: Kubernetes'e Deploy Et ve Güncelle
         run: |
@@ -53,11 +54,7 @@ jobs:
           
           # 2. Yeni imaj Digest'ini alır
           NEW_IMAGE_DIGEST="git.konstantiniyye.studio/gitea_admin/dogu@${{ steps.docker_build.outputs.digest }}"
-          
-          echo "Deployment imajı güncelleniyor: $NEW_IMAGE_DIGEST"
-          
-          # 3. Deployment'ı günceller
+
+          # 3. Deployment'taki imajı günceller ve yeniden başlatır
           kubectl set image deployment/dogu-haritasi web=${NEW_IMAGE_DIGEST} --kubeconfig=/tmp/kubeconfig.yaml -n default
-            
-          # 4. Deployment'ı yeniden başlatır (güncellemenin hemen başlaması için)
           kubectl rollout restart deployment/dogu-haritasi --kubeconfig=/tmp/kubeconfig.yaml -n default
