@@ -1,314 +1,560 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doğu Yönelimli Dünya Haritası</title>
+    <title>Doğu Yönelimli Dünya Haritası | Tarihsel</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+    <!-- Cinzel Decorative for titles, IM Fell English for body to give antique feel -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=IM+Fell+English:ital@0;1&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            /* Historical / Parchment Theme */
+            --bg-color: #f0e6d2;
+            /* Parchment light */
+            --bg-texture: url('https://www.transparenttextures.com/patterns/aged-paper.png');
+            /* Optional texture feel via color/noise */
+
+            --ocean-fill: #d4e4e8;
+            /* Faded vintage blue */
+            --land-fill: #e8dcc5;
+            /* Paper/Land color */
+            --land-stroke: #8b7355;
+            /* Brown ink */
+
+            --text-primary: #2c1810;
+            /* Dark brown ink */
+            --text-secondary: #5d4037;
+            /* Lighter brown */
+
+            --accent-color: #8b0000;
+            /* Deep red for cities/compass */
+
+            --graticule-stroke: #b0a493;
+        }
+
         body {
             margin: 0;
-            padding: 20px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
+            padding: 0;
+            font-family: 'IM Fell English', serif;
+            background-color: var(--bg-color);
+            /* Simple noise texture for paper effect */
+            background-image: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.2)), url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+            color: var(--text-primary);
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            overflow: hidden;
         }
-        
-        #map-container {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            padding: 30px;
-            max-width: 1400px;
-            width: 100%;
+
+        /* Header directly on background */
+        header {
+            position: absolute;
+            top: 20px;
+            left: 40px;
+            z-index: 10;
+            pointer-events: none;
+            /* Let clicks pass through to map if needed */
         }
-        
+
         h1 {
-            text-align: center;
-            color: #2c3e50;
-            margin: 0 0 10px 0;
-            font-size: 28px;
+            margin: 0;
+            font-family: 'Cinzel Decorative', cursive;
+            font-weight: 700;
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.5);
+            letter-spacing: 1px;
         }
-        
+
         .subtitle {
-            text-align: center;
-            color: #7f8c8d;
-            margin: 0 0 20px 0;
-            font-size: 14px;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-top: 5px;
+            border-top: 1px solid var(--text-secondary);
+            display: inline-block;
+            padding-top: 5px;
         }
-        
+
+        #map-wrapper {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            cursor: grab;
+        }
+
+        #map-wrapper:active {
+            cursor: grabbing;
+        }
+
         svg {
+            width: 100%;
+            height: 100%;
             display: block;
-            margin: 0 auto;
         }
-        
+
+        /* Map Styles */
+        .ocean-bg {
+            fill: var(--ocean-fill);
+            opacity: 0.4;
+        }
+
         .country {
-            fill: #e8f4f8;
-            stroke: #34495e;
+            fill: var(--land-fill);
+            stroke: var(--land-stroke);
             stroke-width: 0.5;
-            transition: fill 0.3s;
+            transition: fill 0.3s ease;
         }
-        
+
         .country:hover {
-            fill: #b3d9e6;
+            fill: #dccbb0;
+            /* Slightly darker parchment */
+            stroke: #5d4037;
+            stroke-width: 1;
         }
-        
-        .ocean {
-            fill: #a8d5e2;
-        }
-        
+
         .graticule {
             fill: none;
-            stroke: #ddd;
+            stroke: var(--graticule-stroke);
             stroke-width: 0.5;
-            stroke-opacity: 0.5;
-        }
-        
-        .city {
-            fill: #e74c3c;
-        }
-        
-        .city-label {
-            font-size: 9px;
-            fill: #2c3e50;
-            font-weight: 600;
-            pointer-events: none;
-        }
-        
-        .ocean-label {
-            font-size: 16px;
-            fill: #2980b9;
-            font-weight: 600;
-            font-style: italic;
+            stroke-dasharray: 4, 4;
             opacity: 0.6;
         }
-        
-        .compass {
-            font-size: 14px;
-            font-weight: bold;
-            fill: #34495e;
+
+        .city {
+            fill: var(--accent-color);
+            stroke: #fff;
+            stroke-width: 0.5;
         }
-        
-        .continent-label {
-            font-size: 14px;
-            fill: #34495e;
+
+        /* Removed city-pulse as requested */
+
+        .city-label {
+            font-family: 'IM Fell English', serif;
+            font-size: 12px;
+            fill: var(--text-primary);
+            font-weight: bold;
+            text-shadow:
+                -1px -1px 0 #f0e6d2,
+                1px -1px 0 #f0e6d2,
+                -1px 1px 0 #f0e6d2,
+                1px 1px 0 #f0e6d2;
+            /* Halo effect for readability */
+            pointer-events: none;
+        }
+
+        .ocean-label {
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: 18px;
+            fill: #6b8c96;
+            /* Muted blue text */
             font-weight: 700;
             opacity: 0.7;
+            letter-spacing: 3px;
+            pointer-events: none;
+        }
+
+        .continent-label {
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: 22px;
+            fill: #5d4037;
+            /* Brown */
+            font-weight: 900;
+            opacity: 0.8;
+            letter-spacing: 4px;
+            pointer-events: none;
+            text-transform: uppercase;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+        }
+
+        /* Controls - Antique Style */
+        .controls {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid var(--land-stroke);
+            background: #fdfbf7;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 1.2rem;
+        }
+
+        .btn:hover {
+            background: #e8dcc5;
+            transform: translateY(-2px);
+            box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Tooltip - Parchment Style */
+        #tooltip {
+            position: absolute;
+            padding: 8px 12px;
+            background: #fdfbf7;
+            border: 1px solid var(--land-stroke);
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            font-family: 'IM Fell English', serif;
+            font-size: 1rem;
+            color: var(--text-primary);
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        /* Compass - Antique Rose */
+        .compass-group text {
+            font-family: 'Cinzel Decorative', cursive;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            transition: opacity 0.8s ease;
+        }
+
+        .loader-text {
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: 2rem;
+            color: var(--text-primary);
+            animation: fadePulse 2s infinite;
+        }
+
+        @keyframes fadePulse {
+            0% {
+                opacity: 0.4;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.4;
+            }
         }
     </style>
 </head>
+
 <body>
-    <div id="map-container">
-        <h1>Gerçek Dünya Haritası - Doğu Yönelimli </h1>
-        <p class="subtitle">Doğu Üstte | Eğitim & Profesyonel Kullanım</p>
+
+    <div class="loading-overlay" id="loader">
+        <div class="loader-text">Harita Hazırlanıyor...</div>
+    </div>
+
+    <header>
+        <h1>Doğu Yönelimli Dünya Haritası</h1>
+        <div class="subtitle">Tarihsel Perspektif</div>
+    </header>
+
+    <div id="map-wrapper">
+        <div id="tooltip"></div>
         <svg id="map"></svg>
     </div>
 
+    <div class="controls">
+        <button class="btn" id="zoom-in" title="Yakınlaştır"><i class="fa-solid fa-plus"></i></button>
+        <button class="btn" id="zoom-out" title="Uzaklaştır"><i class="fa-solid fa-minus"></i></button>
+        <button class="btn" id="reset" title="Sıfırla"><i class="fa-solid fa-compress"></i></button>
+    </div>
+
     <script>
-        const width = 1000;
-        const height = 900;
+        const mapContainer = document.getElementById('map-wrapper');
+        const width = mapContainer.clientWidth;
+        const height = mapContainer.clientHeight;
 
         const svg = d3.select("#map")
-            .attr("width", width)
-            .attr("height", height);
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("viewBox", [0, 0, width, height]);
 
-        // Standard projection - we'll rotate the entire SVG group 
+        // Background for Ocean (Full SVG)
+        svg.append("rect")
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("class", "ocean-bg");
+
+        // Group for map content (to be zoomed/panned)
+        const g = svg.append("g");
+
+        // Zoom behavior
+        const zoom = d3.zoom()
+            .scaleExtent([1, 8])
+            .on("zoom", (event) => {
+                g.attr("transform", event.transform);
+                // Keep markers consistent size visually, but let them scale a bit for effect
+                // or keep them fixed. For historical map, fixed stroke width is good.
+                const k = event.transform.k;
+                g.selectAll(".country").attr("stroke-width", 0.5 / k);
+                g.selectAll(".city").attr("r", 3 / k);
+                g.selectAll(".city").attr("stroke-width", 0.5 / k);
+
+                // Scale text slightly but not fully, so it doesn't get huge or tiny
+                // Actually for readability, let's keep text size relatively constant
+                g.selectAll(".city-label").attr("font-size", 12 / k);
+                g.selectAll(".continent-label").attr("font-size", 22 / k);
+                g.selectAll(".ocean-label").attr("font-size", 18 / k);
+            });
+
+        svg.call(zoom);
+
+        // Projection
         const projection = d3.geoNaturalEarth1()
-            .scale(250)
+            .scale(width / 5.5)
             .center([0, 0])
             .translate([width / 2, height / 2]);
 
         const path = d3.geoPath().projection(projection);
 
-        // Create graticule
-        const graticule = d3.geoGraticule();
+        // Tooltip
+        const tooltip = d3.select("#tooltip");
 
-        // Ocean background
-        svg.append("rect")
-            .attr("class", "ocean")
-            .attr("width", width)
-            .attr("height", height);
-
-        // Create a group that will be rotated (rotate -90 for East at top) 
-        const mapGroup = svg.append("g")
-            .attr("transform", `rotate(-90, ${width/2}, ${height/2})`);
-
-        // Add graticule
-        mapGroup.append("path")
-            .datum(graticule)
-            .attr("class", "graticule")
-            .attr("d", path);
-
-        // Major cities with coordinates [longitude, latitude]
+        // Data
         const cities = [
-            {name: "Tokyo", coords: [139.69, 35.69]},
-            {name: "Delhi", coords: [77.10, 28.70]},
-            {name: "Şangay", coords: [121.47, 31.23]},
-            {name: "São Paulo", coords: [-46.63, -23.55]},
-            {name: "Mexico City", coords: [-99.13, 19.43]},
-            {name: "Kahire", coords: [31.24, 30.04]},
-            {name: "Mumbai", coords: [72.88, 19.08]},
-            {name: "Pekin", coords: [116.41, 39.90]},
-            {name: "New York", coords: [-74.01, 40.71]},
-            {name: "Londra", coords: [-0.13, 51.51]},
-            {name: "Paris", coords: [2.35, 48.86]},
-            {name: "Moskova", coords: [37.62, 55.76]},
-            {name: "Sidney", coords: [151.21, -33.87]},
-            {name: "Los Angeles", coords: [-118.24, 34.05]},
-            {name: "Singapur", coords: [103.82, 1.35]},
-            {name: "İstanbul", coords: [28.98, 41.01]},
-            {name: "Buenos Aires", coords: [-58.38, -34.60]},
-            {name: "Lagos", coords: [3.38, 6.52]},
-            {name: "Bangkok", coords: [100.50, 13.76]},
-            {name: "Cape Town", coords: [18.42, -33.92]}
+            { name: "Tokyo", coords: [139.69, 35.69] },
+            { name: "Delhi", coords: [77.10, 28.70] },
+            { name: "Şangay", coords: [121.47, 31.23] },
+            { name: "São Paulo", coords: [-46.63, -23.55] },
+            { name: "Meksiko", coords: [-99.13, 19.43] },
+            { name: "Kahire", coords: [31.24, 30.04] },
+            { name: "Mumbai", coords: [72.88, 19.08] },
+            { name: "Pekin", coords: [116.41, 39.90] },
+            { name: "New York", coords: [-74.01, 40.71] },
+            { name: "Londra", coords: [-0.13, 51.51] },
+            { name: "Paris", coords: [2.35, 48.86] },
+            { name: "Moskova", coords: [37.62, 55.76] },
+            { name: "Sidney", coords: [151.21, -33.87] },
+            { name: "Los Angeles", coords: [-118.24, 34.05] },
+            { name: "Singapur", coords: [103.82, 1.35] },
+            { name: "İstanbul", coords: [28.98, 41.01] },
+            { name: "Buenos Aires", coords: [-58.38, -34.60] },
+            { name: "Lagos", coords: [3.38, 6.52] },
+            { name: "Bangkok", coords: [100.50, 13.76] },
+            { name: "Cape Town", coords: [18.42, -33.92] }
         ];
 
-        // Ocean labels
         const oceans = [
-            {name: "PASİFİK OKYANUSU", coords: [180, 0]},
-            {name: "PASİFİK OKYANUSU", coords: [-160, 0]},
-            {name: "ATLANTİK OKYANUSU", coords: [-30, 15]},
-            {name: "HİNT OKYANUSU", coords: [80, -15]},
-            {name: "ARKTİK OKYANUSU", coords: [0, 80]}
+            { name: "Pasifik Okyanusu", coords: [180, 0] },
+            { name: "Pasifik Okyanusu", coords: [-160, 0] },
+            { name: "Atlantik Okyanusu", coords: [-30, 15] },
+            { name: "Hint Okyanusu", coords: [80, -15] },
+            { name: "Arktik Okyanusu", coords: [0, 80] }
         ];
 
-        // Continent labels
         const continents = [
-            {name: "ASYA", coords: [95, 35]},
-            {name: "AFRİKA", coords: [20, 5]},
-            {name: "AVRUPA", coords: [25, 50]},
-            {name: "KUZEY AMERİKA", coords: [-100, 45]},
-            {name: "GÜNEY AMERİKA", coords: [-60, -15]},
-            {name: "AVUSTRALYA", coords: [135, -25]},
-            {name: "ANTARKTİKA", coords: [25, -80]}
+            { name: "Asya", coords: [95, 35] },
+            { name: "Afrika", coords: [20, 5] },
+            { name: "Avrupa", coords: [25, 50] },
+            { name: "Kuzey Amerika", coords: [-100, 45] },
+            { name: "Güney Amerika", coords: [-60, -15] },
+            { name: "Avustralya", coords: [135, -25] },
+            { name: "Antarktika", coords: [25, -80] }
         ];
 
-        // Load and display world map
+        // Load Data
         d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
             .then(world => {
+                // Remove loader
+                document.getElementById('loader').style.opacity = 0;
+                setTimeout(() => document.getElementById('loader').remove(), 800);
+
                 const countries = topojson.feature(world, world.objects.countries);
-                
-                // Draw countries
-                mapGroup.append("g")
-                    .selectAll("path")
+                const graticule = d3.geoGraticule();
+
+                // Rotate Group for East Orientation (-90 degrees)
+                const rotatedGroup = g.append("g")
+                    .attr("transform", `rotate(-90, ${width / 2}, ${height / 2})`);
+
+                // Graticule (Lines)
+                rotatedGroup.append("path")
+                    .datum(graticule)
+                    .attr("class", "graticule")
+                    .attr("d", path);
+
+                // Countries
+                rotatedGroup.selectAll("path.country")
                     .data(countries.features)
-                    .enter()
-                    .append("path")
+                    .enter().append("path")
                     .attr("class", "country")
                     .attr("d", path)
-                    .append("title")
-                    .text(d => d.properties.name);
+                    .on("mouseover", function (event, d) {
+                        d3.select(this).style("fill", "#dccbb0"); // Highlight
+                        tooltip.transition().duration(200).style("opacity", 1);
+                        tooltip.html(d.properties.name)
+                            .style("left", (event.pageX + 15) + "px")
+                            .style("top", (event.pageY - 15) + "px");
+                    })
+                    .on("mousemove", function (event) {
+                        tooltip
+                            .style("left", (event.pageX + 15) + "px")
+                            .style("top", (event.pageY - 15) + "px");
+                    })
+                    .on("mouseout", function () {
+                        d3.select(this).style("fill", null); // Reset
+                        tooltip.transition().duration(500).style("opacity", 0);
+                    });
 
-                // Add continent labels
-                const continentGroup = mapGroup.append("g");
-                continents.forEach(continent => {
-                    const coords = projection(continent.coords);
-                    if (coords) {
-                        continentGroup.append("text")
-                            .attr("class", "continent-label")
-                            .attr("x", coords[0])
-                            .attr("y", coords[1])
-                            .attr("text-anchor", "middle")
-                            .attr("transform", `rotate(90, ${coords[0]}, ${coords[1]})`)
-                            .text(continent.name);
-                    }
-                });
+                // Labels helper function
+                // Added 'pointer-events: none' in CSS to ensure they don't block mouse events
+                const addLabels = (data, className, fontSize) => {
+                    const group = rotatedGroup.append("g");
+                    data.forEach(item => {
+                        const coords = projection(item.coords);
+                        if (coords) {
+                            group.append("text")
+                                .attr("class", className)
+                                .attr("x", coords[0])
+                                .attr("y", coords[1])
+                                .attr("text-anchor", "middle")
+                                .attr("transform", `rotate(90, ${coords[0]}, ${coords[1]})`)
+                                .text(item.name);
+                        }
+                    });
+                };
 
-                // Add ocean labels
-                const oceanGroup = mapGroup.append("g");
-                oceans.forEach(ocean => {
-                    const coords = projection(ocean.coords);
-                    if (coords) {
-                        oceanGroup.append("text")
-                            .attr("class", "ocean-label")
-                            .attr("x", coords[0])
-                            .attr("y", coords[1])
-                            .attr("text-anchor", "middle")
-                            .attr("transform", `rotate(90, ${coords[0]}, ${coords[1]})`)
-                            .text(ocean.name);
-                    }
-                });
+                // Add labels AFTER countries so they are on top
+                addLabels(oceans, "ocean-label");
+                addLabels(continents, "continent-label");
 
-                // Add cities
-                const cityGroup = mapGroup.append("g");
-                
+                // Cities
+                const cityGroup = rotatedGroup.append("g");
                 cities.forEach(city => {
                     const coords = projection(city.coords);
                     if (coords) {
+                        // Main city dot
                         cityGroup.append("circle")
                             .attr("class", "city")
                             .attr("cx", coords[0])
                             .attr("cy", coords[1])
-                            .attr("r", 2.5);
-                        
+                            .attr("r", 3)
+                            .on("mouseover", (event) => {
+                                tooltip.transition().duration(200).style("opacity", 1);
+                                tooltip.html(`<strong>${city.name}</strong>`)
+                                    .style("left", (event.pageX + 15) + "px")
+                                    .style("top", (event.pageY - 15) + "px");
+                            })
+                            .on("mouseout", () => {
+                                tooltip.transition().duration(500).style("opacity", 0);
+                            });
+
+                        // City Label
                         cityGroup.append("text")
                             .attr("class", "city-label")
                             .attr("x", coords[0])
-                            .attr("y", coords[1])
+                            .attr("y", coords[1] - 8)
                             .attr("text-anchor", "middle")
                             .attr("transform", `rotate(90, ${coords[0]}, ${coords[1]})`)
                             .text(city.name);
                     }
                 });
 
-                // Add compass rose (not rotated, stays in normal orientation)
+                // Compass (Static, Antique Style)
+                // East (D) is UP.
                 const compassGroup = svg.append("g")
-                    .attr("transform", `translate(${width - 70}, 60)`);
-                
+                    .attr("class", "compass-group")
+                    .attr("transform", `translate(${width - 80}, 80)`);
+
+                // Compass Rose Background
+                compassGroup.append("circle")
+                    .attr("r", 40)
+                    .attr("fill", "#fdfbf7")
+                    .attr("stroke", "#8b7355")
+                    .attr("stroke-width", 2);
+
+                // Decorative inner circle
                 compassGroup.append("circle")
                     .attr("r", 35)
-                    .attr("fill", "white")
-                    .attr("stroke", "#34495e")
-                    .attr("stroke-width", 2);
-                
-                // East at top
-                compassGroup.append("text")
-                    .attr("class", "compass")
-                    .attr("text-anchor", "middle")
-                    .attr("y", -40)
-                    .attr("fill", "#e74c3c")
-                    .text("D");
-                
-                // West at bottom
-                compassGroup.append("text")
-                    .attr("class", "compass")
-                    .attr("text-anchor", "middle")
-                    .attr("y", 45)
-                    .text("B");
-                
-                // North at left
-                compassGroup.append("text")
-                    .attr("class", "compass")
-                    .attr("text-anchor", "middle")
-                    .attr("x", -40)
-                    .attr("y", 5)
-                    .text("K");
-                
-                // South at right
-                compassGroup.append("text")
-                    .attr("class", "compass")
-                    .attr("text-anchor", "middle")
-                    .attr("x", 40)
-                    .attr("y", 5)
-                    .text("G");
+                    .attr("fill", "none")
+                    .attr("stroke", "#8b7355")
+                    .attr("stroke-width", 1)
+                    .attr("stroke-dasharray", "2,2");
 
-                // Compass arrow
+                const directions = [
+                    { text: "D", x: 0, y: -22, color: "#8b0000" }, // East Top
+                    { text: "B", x: 0, y: 32, color: "#5d4037" },  // West Bottom
+                    { text: "K", x: -28, y: 5, color: "#5d4037" }, // North Left
+                    { text: "G", x: 28, y: 5, color: "#5d4037" }   // South Right
+                ];
+
+                directions.forEach(d => {
+                    compassGroup.append("text")
+                        .attr("x", d.x)
+                        .attr("y", d.y)
+                        .attr("text-anchor", "middle")
+                        .attr("fill", d.color)
+                        .text(d.text);
+                });
+
+                // Compass Arrow (Fleur-de-lis style simplified)
                 compassGroup.append("path")
-                    .attr("d", "M 0,-25 L -4,-15 L 4,-15 Z")
-                    .attr("fill", "#e74c3c");
+                    .attr("d", "M 0,-20 L -5,-5 L 0,0 L 5,-5 Z")
+                    .attr("fill", "#8b0000");
+
+                compassGroup.append("path")
+                    .attr("d", "M 0,20 L -5,5 L 0,0 L 5,5 Z")
+                    .attr("fill", "#8b7355");
+
+                compassGroup.append("path")
+                    .attr("d", "M -20,0 L -5,-5 L 0,0 L -5,5 Z")
+                    .attr("fill", "#8b7355");
+
+                compassGroup.append("path")
+                    .attr("d", "M 20,0 L 5,-5 L 0,0 L 5,5 Z")
+                    .attr("fill", "#8b7355");
+
             })
-            .catch(error => {
-                console.error("Harita yüklenirken hata:", error);
-                svg.append("text")
-                    .attr("x", width / 2)
-                    .attr("y", height / 2)
-                    .attr("text-anchor", "middle")
-                    .attr("fill", "#e74c3c")
-                    .text("Harita yüklenirken hata oluştu. Lütfen sayfayı yenileyin.");
-            });
+            .catch(err => console.error(err));
+
+        // Control Event Listeners
+        document.getElementById('zoom-in').addEventListener('click', () => {
+            svg.transition().duration(750).call(zoom.scaleBy, 1.5);
+        });
+
+        document.getElementById('zoom-out').addEventListener('click', () => {
+            svg.transition().duration(750).call(zoom.scaleBy, 0.6);
+        });
+
+        document.getElementById('reset').addEventListener('click', () => {
+            svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
+        });
+
+        window.addEventListener('resize', () => {
+            const newWidth = mapContainer.clientWidth;
+            const newHeight = mapContainer.clientHeight;
+            svg.attr("viewBox", [0, 0, newWidth, newHeight]);
+            projection.translate([newWidth / 2, newHeight / 2]);
+        });
+
     </script>
 </body>
+
 </html>
