@@ -1,17 +1,23 @@
 name: Harita Build ve Deploy
-run-name: ${{ gitea.actor }} Harita Yayınlanıyor 🟢
+run-name: ${{ gitea.actor }} Harita Build ve Deploy 🚀
 on: [push]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     
-    # DOCKER_HOST tanımı KALDIRILDI!
+    # KUBERNETES ÜZERİNDEKİ DOCKER BAĞLANTISI İÇİN GEREKLİ ORTAM DEĞİŞKENLERİ
+    env:
+      DOCKER_HOST: unix:///var/run/dind-socket-dir/docker.sock 
+      DOCKER_TLS_CERTDIR: ""
+
     steps:
       - name: Kodu Çek (Checkout)
         uses: actions/checkout@v3
 
-      # Sadece Docker'ı başlatmak kalıyor
+      # -----------------------------------------------------------------
+      # CI KISMI
+      # -----------------------------------------------------------------
       - name: Docker Buildx Kurulumu
         uses: docker/setup-buildx-action@v3
 
@@ -22,7 +28,9 @@ jobs:
           username: gitea_admin
           password: ${{ secrets.REGISTRY_TOKEN }}
 
+      # PUSH ADIMI: Yeni imajın kimliğini (digest) çıktı olarak alıyoruz
       - name: Docker Build ve Push
+        id: docker_build # <-- Çıktı almak için bu ID gerekli
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -30,3 +38,24 @@ jobs:
           tags: git.konstantiniyye.studio/gitea_admin/dogu:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # -----------------------------------------------------------------
+      # CD KISMI (Continuous Deployment)
+      # -----------------------------------------------------------------
+      - name: Kubernetes'e Deploy Et
+        uses: appleboy/kubectl-action@master # Popüler kubectl action'ı
+        with:
+          # Gitea'da tanımlanan Kubeconfig Secret'ı kullanır
+          kubeconfig_content: ${{ secrets.KUBE_CONFIG }}
+          # Tek bir shell komutunda imajı güncelleyip Deployment'ı yeniden başlatır
+          script: |
+            # Yeni imajın Digest'i (sha256:...) otomatik olarak alınır
+            NEW_IMAGE_DIGEST="git.konstantiniyye.studio/gitea_admin/dogu@${{ steps.docker_build.outputs.digest }}"
+
+            echo "Yeni imaj: $NEW_IMAGE_DIGEST"
+
+            # 1. Deployment'taki imajı yeni Digest ile günceller
+            kubectl set image deployment/dogu-haritasi web=${NEW_IMAGE_DIGEST} -n default
+            
+            # 2. Güncellemenin hemen başlaması için Deployment'ı yeniden başlatır
+            kubectl rollout restart deployment/dogu-haritasi -n default

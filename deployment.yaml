@@ -13,9 +13,12 @@ spec:
       labels:
         app: dogu-haritasi
     spec:
+      # KUBERNETES BURADAN İZİN BELGELERİNİ ALIR
+      imagePullSecrets: 
+        - name: gitea-reg-cred
       containers:
         - name: web
-          # Kendi kullanıcı adınla güncelle
+          # İmajınız
           image: git.konstantiniyye.studio/gitea_admin/dogu:latest 
           imagePullPolicy: Always
           ports:
@@ -27,6 +30,7 @@ metadata:
   name: dogu-haritasi-service
   namespace: default
 spec:
+  # Service objesine secrets eklenmez, sadece Pod'u seçer
   selector:
     app: dogu-haritasi
   type: ClusterIP
