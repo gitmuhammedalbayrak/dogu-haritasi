@@ -36,12 +36,13 @@ jobs:
           tags: git.konstantiniyye.studio/gitea_admin/dogu:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          
 
       # -----------------------------------------------------------------
-      # CD KISMI (Kubernetes Güncellemesi - GitHub bağımsız)
+      # CD KISMI (Düzeltilmiş)
       # -----------------------------------------------------------------
       - name: Kubectl Binary Kurulumu
-        # ARM64 uyumlu kubectl'i kurar (Aksiyon hatası yerine run komutu kullanıldı)
+        # ARM64 uyumlu kubectl'i kurar
         run: |
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl"
           chmod +x kubectl
@@ -55,6 +56,12 @@ jobs:
           # 2. Yeni imaj Digest'ini alır
           NEW_IMAGE_DIGEST="git.konstantiniyye.studio/gitea_admin/dogu@${{ steps.docker_build.outputs.digest }}"
 
-          # 3. Deployment'taki imajı günceller ve yeniden başlatır
-          kubectl set image deployment/dogu-haritasi web=${NEW_IMAGE_DIGEST} --kubeconfig=/tmp/kubeconfig.yaml -n default
-          kubectl rollout restart deployment/dogu-haritasi --kubeconfig=/tmp/kubeconfig.yaml -n default
+          # 3. Deployment'ı günceller ve yeniden başlatır
+          # ⚠️ BURADA İKİ KOMUTA DA TLS KONTROLÜNÜ DEVRE DIŞI BIRAKAN BAYRAĞI EKLİYORUZ
+          kubectl set image deployment/dogu-haritasi web=${NEW_IMAGE_DIGEST} \
+            --kubeconfig=/tmp/kubeconfig.yaml -n default \
+            --insecure-skip-tls-verify
+            
+          kubectl rollout restart deployment/dogu-haritasi \
+            --kubeconfig=/tmp/kubeconfig.yaml -n default \
+            --insecure-skip-tls-verify
