@@ -6,7 +6,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     
-    # KUBERNETES ÜZERİNDEKİ DOCKER BAĞLANTISI İÇİN GEREKLİ ORTAM DEĞİŞKENLERİ
+    # DOCKER İÇİN GEREKLİ ENV AYARLARI
     env:
       DOCKER_HOST: unix:///var/run/dind-socket-dir/docker.sock 
       DOCKER_TLS_CERTDIR: ""
@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v3
 
       # -----------------------------------------------------------------
-      # CI KISMI
+      # CI KISMI (Burada hata yok, hız için kısaltıldı)
       # -----------------------------------------------------------------
       - name: Docker Buildx Kurulumu
         uses: docker/setup-buildx-action@v3
@@ -28,9 +28,9 @@ jobs:
           username: gitea_admin
           password: ${{ secrets.REGISTRY_TOKEN }}
 
-      # PUSH ADIMI: Yeni imajın kimliğini (digest) çıktı olarak alıyoruz
+      # PUSH ADIMI: Digest'i çıktı olarak alır
       - name: Docker Build ve Push
-        id: docker_build # <-- Çıktı almak için bu ID gerekli
+        id: docker_build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -40,22 +40,24 @@ jobs:
           cache-to: type=gha,mode=max
 
       # -----------------------------------------------------------------
-      # CD KISMI (Continuous Deployment)
+      # CD KISMI (GitHub bağımsız, sadece 'run' komutları ile)
       # -----------------------------------------------------------------
-      - name: Kubernetes'e Deploy Et
-        uses: appleboy/kubectl-action@master # Popüler kubectl action'ı
-        with:
-          # Gitea'da tanımlanan Kubeconfig Secret'ı kullanır
-          kubeconfig_content: ${{ secrets.KUBE_CONFIG }}
-          # Tek bir shell komutunda imajı güncelleyip Deployment'ı yeniden başlatır
-          script: |
-            # Yeni imajın Digest'i (sha256:...) otomatik olarak alınır
-            NEW_IMAGE_DIGEST="git.konstantiniyye.studio/gitea_admin/dogu@${{ steps.docker_build.outputs.digest }}"
+      - name: Kubectl Binary Kurulumu
+        # catthehacker imajında kubectl olsa da, buraya basit bir check ekledik
+        run: which kubectl || (echo "Kubectl bulunamadi, kuruluyor..." && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl" && chmod +x kubectl && sudo mv kubectl /usr/local/bin/)
 
-            echo "Yeni imaj: $NEW_IMAGE_DIGEST"
-
-            # 1. Deployment'taki imajı yeni Digest ile günceller
-            kubectl set image deployment/dogu-haritasi web=${NEW_IMAGE_DIGEST} -n default
+      - name: Kubernetes'e Deploy Et ve Güncelle
+        run: |
+          # 1. Kubeconfig içeriğini dosyaya yazar
+          echo "${{ secrets.KUBE_CONFIG }}" > /tmp/kubeconfig.yaml
+          
+          # 2. Yeni imaj Digest'ini alır
+          NEW_IMAGE_DIGEST="git.konstantiniyye.studio/gitea_admin/dogu@${{ steps.docker_build.outputs.digest }}"
+          
+          echo "Deployment imajı güncelleniyor: $NEW_IMAGE_DIGEST"
+          
+          # 3. Deployment'ı günceller
+          kubectl set image deployment/dogu-haritasi web=${NEW_IMAGE_DIGEST} --kubeconfig=/tmp/kubeconfig.yaml -n default
             
-            # 2. Güncellemenin hemen başlaması için Deployment'ı yeniden başlatır
-            kubectl rollout restart deployment/dogu-haritasi -n default
+          # 4. Deployment'ı yeniden başlatır (güncellemenin hemen başlaması için)
+          kubectl rollout restart deployment/dogu-haritasi --kubeconfig=/tmp/kubeconfig.yaml -n default
