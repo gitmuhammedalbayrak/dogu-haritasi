@@ -117,9 +117,8 @@
 
         // Standard projection - we'll rotate the entire SVG group 
         const projection = d3.geoNaturalEarth1()
-            .scale(200)
+            .scale(240)
             .center([0, 0])
-            .clipExtent([[0, 0], [width, height]])
             .translate([width / 2, height / 2]);
 
         const path = d3.geoPath().projection(projection);
