@@ -58,7 +58,7 @@ jobs:
           # 3. TLS kontrolünü atlayarak Deployment'ı günceller (Rancher Self-Signed Fix)
           # NOT: Kubeconfig'inize insecure-skip-tls-verify: true eklediyseniz, bu satırlar çalışacaktır.
           kubectl set image deployment/dogu-haritasi web=${NEW_IMAGE_DIGEST} \
-            --kubeconfig=/tmp/kubeconfig.yaml -n default
+            --kubeconfig=/tmp/kubeconfig.yaml -n harita
             
           kubectl rollout restart deployment/dogu-haritasi \
-            --kubeconfig=/tmp/kubeconfig.yaml -n default
+            --kubeconfig=/tmp/kubeconfig.yaml -n harita
