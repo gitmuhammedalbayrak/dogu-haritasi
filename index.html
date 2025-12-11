@@ -416,6 +416,34 @@
                     (navigator.msMaxTouchPoints > 0));
         };
 
+        // Get initial font sizes from CSS
+        const getBaseFontSizes = () => {
+            const tempCity = document.createElement('text');
+            tempCity.className = 'city-label';
+            tempCity.textContent = 'test';
+            document.body.appendChild(tempCity);
+            const citySize = parseFloat(window.getComputedStyle(tempCity).fontSize);
+            document.body.removeChild(tempCity);
+
+            const tempOcean = document.createElement('text');
+            tempOcean.className = 'ocean-label';
+            tempOcean.textContent = 'test';
+            document.body.appendChild(tempOcean);
+            const oceanSize = parseFloat(window.getComputedStyle(tempOcean).fontSize);
+            document.body.removeChild(tempOcean);
+
+            const tempContinent = document.createElement('text');
+            tempContinent.className = 'continent-label';
+            tempContinent.textContent = 'test';
+            document.body.appendChild(tempContinent);
+            const continentSize = parseFloat(window.getComputedStyle(tempContinent).fontSize);
+            document.body.removeChild(tempContinent);
+
+            return { citySize, oceanSize, continentSize };
+        };
+
+        const baseFontSizes = getBaseFontSizes();
+
         // Background for Ocean (Full SVG)
         svg.append("rect")
             .attr("width", "100%")
@@ -439,9 +467,9 @@
 
                 // Scale text slightly but not fully, so it doesn't get huge or tiny
                 // Actually for readability, let's keep text size relatively constant
-                g.selectAll(".city-label").attr("font-size", 12 / k);
-                g.selectAll(".continent-label").attr("font-size", 22 / k);
-                g.selectAll(".ocean-label").attr("font-size", 18 / k);
+                g.selectAll(".city-label").attr("font-size", baseFontSizes.citySize / k);
+                g.selectAll(".continent-label").attr("font-size", baseFontSizes.continentSize / k);
+                g.selectAll(".ocean-label").attr("font-size", baseFontSizes.oceanSize / k);
             });
 
         svg.call(zoom);
