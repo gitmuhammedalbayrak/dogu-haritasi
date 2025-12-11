@@ -66,20 +66,42 @@
             margin: 0;
             font-family: 'Cinzel Decorative', cursive;
             font-weight: 700;
-            font-size: 2.5rem;
+            font-size: 1.3rem;
             color: var(--text-primary);
             text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.5);
             letter-spacing: 1px;
         }
 
         .subtitle {
-            font-size: 1.1rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
             font-style: italic;
             margin-top: 5px;
             border-top: 1px solid var(--text-secondary);
             display: inline-block;
             padding-top: 5px;
+        }
+
+        /* Tablet Responsive Typography */
+        @media (min-width: 481px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .subtitle {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Desktop Responsive Typography */
+        @media (min-width: 769px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .subtitle {
+                font-size: 1.1rem;
+            }
         }
 
         #map-wrapper {
@@ -138,7 +160,7 @@
 
         .city-label {
             font-family: 'IM Fell English', serif;
-            font-size: 12px;
+            font-size: 6px;
             fill: var(--text-primary);
             font-weight: bold;
             text-shadow:
@@ -152,42 +174,76 @@
 
         .ocean-label {
             font-family: 'Cinzel Decorative', cursive;
-            font-size: 18px;
+            font-size: 9px;
             fill: #6b8c96;
             /* Muted blue text */
             font-weight: 700;
             opacity: 0.7;
-            letter-spacing: 3px;
+            letter-spacing: 1px;
             pointer-events: none;
         }
 
         .continent-label {
             font-family: 'Cinzel Decorative', cursive;
-            font-size: 22px;
+            font-size: 10px;
             fill: #5d4037;
             /* Brown */
             font-weight: 900;
             opacity: 0.8;
-            letter-spacing: 4px;
+            letter-spacing: 1px;
             pointer-events: none;
             text-transform: uppercase;
             text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
         }
 
+        /* Tablet Responsive Labels */
+        @media (min-width: 481px) {
+            .city-label {
+                font-size: 8px;
+            }
+
+            .ocean-label {
+                font-size: 11px;
+                letter-spacing: 1px;
+            }
+
+            .continent-label {
+                font-size: 12px;
+                letter-spacing: 1px;
+            }
+        }
+
+        /* Desktop Responsive Labels */
+        @media (min-width: 769px) {
+            .city-label {
+                font-size: 12px;
+            }
+
+            .ocean-label {
+                font-size: 18px;
+                letter-spacing: 3px;
+            }
+
+            .continent-label {
+                font-size: 22px;
+                letter-spacing: 4px;
+            }
+        }
+
         /* Controls - Antique Style */
         .controls {
             position: absolute;
-            bottom: 40px;
-            right: 40px;
+            bottom: 12px;
+            right: 12px;
             display: flex;
-            flex-direction: column;
-            gap: 10px;
+            flex-direction: row;
+            gap: 6px;
             z-index: 100;
         }
 
         .btn {
-            width: 45px;
-            height: 45px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             border: 2px solid var(--land-stroke);
             background: #fdfbf7;
@@ -198,7 +254,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-            font-size: 1.2rem;
+            font-size: 1rem;
         }
 
         .btn:hover {
@@ -207,10 +263,46 @@
             box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.2);
         }
 
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Tablet Responsive Controls */
+        @media (min-width: 481px) {
+            .controls {
+                bottom: 20px;
+                right: 20px;
+                gap: 8px;
+            }
+
+            .btn {
+                width: 48px;
+                height: 48px;
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Desktop Responsive Controls */
+        @media (min-width: 769px) {
+            .controls {
+                bottom: 40px;
+                right: 40px;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn {
+                width: 45px;
+                height: 45px;
+                font-size: 1.2rem;
+            }
+        }
+
         /* Tooltip - Parchment Style */
         #tooltip {
             position: absolute;
-            padding: 8px 12px;
+            padding: 5px 8px;
             background: #fdfbf7;
             border: 1px solid var(--land-stroke);
             border-radius: 4px;
@@ -218,10 +310,30 @@
             opacity: 0;
             transition: opacity 0.2s;
             font-family: 'IM Fell English', serif;
-            font-size: 1rem;
+            font-size: 0.75rem;
             color: var(--text-primary);
             box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
             z-index: 1000;
+            max-width: 100px;
+            word-wrap: break-word;
+        }
+
+        /* Tablet Responsive Tooltip */
+        @media (min-width: 481px) {
+            #tooltip {
+                font-size: 0.85rem;
+                padding: 6px 10px;
+                max-width: 150px;
+            }
+        }
+
+        /* Desktop Responsive Tooltip */
+        @media (min-width: 769px) {
+            #tooltip {
+                font-size: 1rem;
+                padding: 8px 12px;
+                max-width: 200px;
+            }
         }
 
         /* Compass - Antique Rose */
@@ -297,6 +409,13 @@
             .attr("height", "100%")
             .attr("viewBox", [0, 0, width, height]);
 
+        // Detect touch device
+        const isTouchDevice = () => {
+            return (('ontouchstart' in window) ||
+                    (navigator.maxTouchPoints > 0) ||
+                    (navigator.msMaxTouchPoints > 0));
+        };
+
         // Background for Ocean (Full SVG)
         svg.append("rect")
             .attr("width", "100%")
@@ -306,7 +425,7 @@
         // Group for map content (to be zoomed/panned)
         const g = svg.append("g");
 
-        // Zoom behavior
+        // Zoom behavior with touch support
         const zoom = d3.zoom()
             .scaleExtent([1, 8])
             .on("zoom", (event) => {
@@ -326,6 +445,9 @@
             });
 
         svg.call(zoom);
+
+        // Disable zoom on mobile double-tap by default
+        svg.on("dblclick.zoom", null);
 
         // Projection
         const projection = d3.geoNaturalEarth1()
@@ -407,19 +529,40 @@
                     .attr("class", "country")
                     .attr("d", path)
                     .on("mouseover", function (event, d) {
-                        d3.select(this).style("fill", "#dccbb0"); // Highlight
-                        tooltip.transition().duration(200).style("opacity", 1);
-                        tooltip.html(d.properties.name)
-                            .style("left", (event.pageX + 15) + "px")
-                            .style("top", (event.pageY - 15) + "px");
+                        if (!isTouchDevice()) {
+                            d3.select(this).style("fill", "#dccbb0");
+                            tooltip.transition().duration(200).style("opacity", 1);
+                            tooltip.html(d.properties.name)
+                                .style("left", (event.pageX + 15) + "px")
+                                .style("top", (event.pageY - 15) + "px");
+                        }
                     })
                     .on("mousemove", function (event) {
-                        tooltip
-                            .style("left", (event.pageX + 15) + "px")
-                            .style("top", (event.pageY - 15) + "px");
+                        if (!isTouchDevice()) {
+                            tooltip
+                                .style("left", (event.pageX + 15) + "px")
+                                .style("top", (event.pageY - 15) + "px");
+                        }
                     })
                     .on("mouseout", function () {
-                        d3.select(this).style("fill", null); // Reset
+                        if (!isTouchDevice()) {
+                            d3.select(this).style("fill", null);
+                            tooltip.transition().duration(500).style("opacity", 0);
+                        }
+                    })
+                    .on("touchstart", function (event, d) {
+                        event.preventDefault();
+                        d3.select(this).style("fill", "#dccbb0");
+                        tooltip.transition().duration(200).style("opacity", 1);
+                        tooltip.html(d.properties.name);
+                        
+                        const touch = event.touches[0];
+                        tooltip
+                            .style("left", (touch.pageX + 15) + "px")
+                            .style("top", (touch.pageY - 15) + "px");
+                    })
+                    .on("touchend", function () {
+                        d3.select(this).style("fill", null);
                         tooltip.transition().duration(500).style("opacity", 0);
                     });
 
@@ -457,12 +600,36 @@
                             .attr("cy", coords[1])
                             .attr("r", 3)
                             .on("mouseover", (event) => {
-                                tooltip.transition().duration(200).style("opacity", 1);
-                                tooltip.html(`<strong>${city.name}</strong>`)
-                                    .style("left", (event.pageX + 15) + "px")
-                                    .style("top", (event.pageY - 15) + "px");
+                                if (!isTouchDevice()) {
+                                    tooltip.transition().duration(200).style("opacity", 1);
+                                    tooltip.html(`<strong>${city.name}</strong>`)
+                                        .style("left", (event.pageX + 15) + "px")
+                                        .style("top", (event.pageY - 15) + "px");
+                                }
+                            })
+                            .on("mousemove", (event) => {
+                                if (!isTouchDevice()) {
+                                    tooltip
+                                        .style("left", (event.pageX + 15) + "px")
+                                        .style("top", (event.pageY - 15) + "px");
+                                }
                             })
                             .on("mouseout", () => {
+                                if (!isTouchDevice()) {
+                                    tooltip.transition().duration(500).style("opacity", 0);
+                                }
+                            })
+                            .on("touchstart", (event) => {
+                                event.preventDefault();
+                                tooltip.transition().duration(200).style("opacity", 1);
+                                tooltip.html(`<strong>${city.name}</strong>`);
+                                
+                                const touch = event.touches[0];
+                                tooltip
+                                    .style("left", (touch.pageX + 15) + "px")
+                                    .style("top", (touch.pageY - 15) + "px");
+                            })
+                            .on("touchend", () => {
                                 tooltip.transition().duration(500).style("opacity", 0);
                             });
 
@@ -546,6 +713,37 @@
         document.getElementById('reset').addEventListener('click', () => {
             svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
         });
+
+        // Add touch event listeners for better mobile support
+        document.getElementById('zoom-in').addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            this.style.transform = 'scale(0.95)';
+        }, { passive: false });
+
+        document.getElementById('zoom-in').addEventListener('touchend', function(e) {
+            e.preventDefault();
+            this.style.transform = '';
+        }, { passive: false });
+
+        document.getElementById('zoom-out').addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            this.style.transform = 'scale(0.95)';
+        }, { passive: false });
+
+        document.getElementById('zoom-out').addEventListener('touchend', function(e) {
+            e.preventDefault();
+            this.style.transform = '';
+        }, { passive: false });
+
+        document.getElementById('reset').addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            this.style.transform = 'scale(0.95)';
+        }, { passive: false });
+
+        document.getElementById('reset').addEventListener('touchend', function(e) {
+            e.preventDefault();
+            this.style.transform = '';
+        }, { passive: false });
 
         window.addEventListener('resize', () => {
             const newWidth = mapContainer.clientWidth;
