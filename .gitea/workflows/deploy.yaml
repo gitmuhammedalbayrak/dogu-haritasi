@@ -23,7 +23,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: git.konstantiniyye.studio
-          username: gitea_admin
+          username: patron
           password: ${{ secrets.REGISTRY_TOKEN }}
 
       # PUSH ADIMI: İmajın kimliğini (digest) çıktı olarak alıyoruz
@@ -33,7 +33,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: git.konstantiniyye.studio/gitea_admin/dogu:latest
+          tags: git.konstantiniyye.studio/admin/dogu:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -53,7 +53,7 @@ jobs:
           echo "${{ secrets.KUBE_CONFIG }}" > /tmp/kubeconfig.yaml
           
           # 2. Yeni imaj Digest'ini alır
-          NEW_IMAGE_DIGEST="git.konstantiniyye.studio/gitea_admin/dogu@${{ steps.docker_build.outputs.digest }}"
+          NEW_IMAGE_DIGEST="git.konstantiniyye.studio/admin/dogu@${{ steps.docker_build.outputs.digest }}"
 
           # 3. TLS kontrolünü atlayarak Deployment'ı günceller (Rancher Self-Signed Fix)
           # NOT: Kubeconfig'inize insecure-skip-tls-verify: true eklediyseniz, bu satırlar çalışacaktır.
