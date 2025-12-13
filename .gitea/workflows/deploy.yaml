@@ -46,10 +46,16 @@ jobs:
 
       - name: Kubernetes'e Deploy Et ve Güncelle
         run: |
-          # 1. Kubeconfig dosyasını oluştur
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > /tmp/kubeconfig.yaml
+          # 1. Secret'taki olası boşlukları ve satır sonlarını (tr komutuyla) temizleyip decode et
+          echo "${{ secrets.KUBE_CONFIG }}" | tr -d '\n' | tr -d ' ' | base64 -d > /tmp/kubeconfig.yaml
           chmod 600 /tmp/kubeconfig.yaml
           
+          # Kontrol: Dosya oluştu mu ve içi dolu mu? (İçeriği yazdırmaz, sadece boyutu yazar)
+          if [ ! -s /tmp/kubeconfig.yaml ]; then
+            echo "HATA: Kubeconfig dosyası boş! Secret içeriği hatalı olabilir."
+            exit 1
+          fi
+
           # 2. Yeni imaj Digest'ini al
           NEW_IMAGE_DIGEST="git.konstantiniyye.studio/admin/dogu@${{ steps.docker_build.outputs.digest }}"
           echo "Deploying image: $NEW_IMAGE_DIGEST"
