@@ -24,7 +24,7 @@ jobs:
         with:
           registry: git.konstantiniyye.studio
           username: patron
-          password: ${{ secrets.REGISTRY_TOKEN }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       # PUSH ADIMI: İmajın kimliğini (digest) çıktı olarak alıyoruz. (-kontrol için ek-)
       - name: Docker Build ve Push
