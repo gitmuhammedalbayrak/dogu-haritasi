@@ -38,53 +38,59 @@ jobs:
       # CD KISMI (Final - Manuel Kurulum ve Otomatik Algılama)
       # -----------------------------------------------------------------
       
-      - name: Deploy İşlemi (Debug Modu)
+      - name: Akıllı Deploy ve Config Onarımı
         run: |
-          set -e # Hata olursa anında dur
+          set -e
           
-          echo "==== 1. ADIM: KUBECTL KURULUMU ===="
-          # İşletim sistemi mimarisini bul (amd64 veya arm64)
+          echo "==== 1. ADIM: KUBECTL HAZIRLIK ===="
+          # Mimariye uygun kubectl indir
           ARCH="amd64"
           if [ "$(uname -m)" = "aarch64" ]; then ARCH="arm64"; fi
-          echo "Mimari: $ARCH tespit edildi."
-          
-          # Kubectl indir ve kur
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${ARCH}/kubectl"
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/kubectl
           
-          echo "Kubectl versiyonu:"
-          kubectl version --client
-
           echo "==== 2. ADIM: CONFIG DOSYASINI OLUŞTURMA ===="
-          # Secret içeriğini geçici bir dosyaya al
-          echo "${{ secrets.KUBE_CONFIG }}" > /tmp/secret_raw
+          # Secret'ı ham haliyle kaydet
+          echo "${{ secrets.KUBE_CONFIG }}" > /tmp/raw_secret
           
-          # Dosyanın Base64 mü yoksa Düz YAML mı olduğunu kontrol et
-          if grep -q "apiVersion" /tmp/secret_raw; then
-            echo "TESPIT: Secret düz YAML formatında. Olduğu gibi kullanılıyor."
-            mv /tmp/secret_raw /tmp/kubeconfig.yaml
+          # YÖNTEM A: Dosya zaten DÜZ YAML mı? (İçinde 'apiVersion' yazıyor mu?)
+          if grep -q "apiVersion" /tmp/raw_secret; then
+            echo "✅ TESPIT: Secret zaten düz YAML formatında. Doğrudan kullanılıyor."
+            cp /tmp/raw_secret /tmp/kubeconfig.yaml
+          
+          # YÖNTEM B: Değilse, Base64 olduğunu varsay ve temizleyerek decode et
           else
-            echo "TESPIT: Secret Base64 formatında (veya bilinmiyor). Decode ediliyor..."
-            cat /tmp/secret_raw | base64 -d > /tmp/kubeconfig.yaml
+            echo "⚠️ TESPIT: Secret kodlanmış görünüyor. Temizlenip Base64 çözülüyor..."
+            # Tüm boşlukları ve satır sonlarını silip öyle decode et (En kritik nokta burası)
+            tr -d '\n\r ' < /tmp/raw_secret | base64 -d > /tmp/kubeconfig.yaml
           fi
-          
+
           chmod 600 /tmp/kubeconfig.yaml
           
-          echo "==== 3. ADIM: BAĞLANTI TESTİ ===="
-          # Bağlantı testi (Hata verirse deployu durdurur)
-          kubectl get nodes --kubeconfig=/tmp/kubeconfig.yaml
+          # KONTROL: Dosya oluştu mu ve içeriği mantıklı mı?
+          echo "Config dosyası kontrol ediliyor (İlk 5 satır):"
+          head -n 5 /tmp/kubeconfig.yaml
           
-          echo "==== 4. ADIM: DEPLOY VE GÜNCELLEME ===="
+          # Dosya boşsa hata ver
+          if [ ! -s /tmp/kubeconfig.yaml ]; then
+            echo "❌ HATA: Config dosyası boş oluşturuldu! Secret içeriğini kontrol et."
+            exit 1
+          fi
+
+          echo "==== 3. ADIM: DEPLOY ===="
           NEW_IMAGE_DIGEST="git.konstantiniyye.studio/admin/dogu@${{ steps.docker_build.outputs.digest }}"
-          echo "Yeni İmaj: $NEW_IMAGE_DIGEST"
+          echo "Hedef İmaj: $NEW_IMAGE_DIGEST"
 
-          # Deployment güncelle
-          kubectl set image deployment/dogu-haritasi web=${NEW_IMAGE_DIGEST} \
-            --kubeconfig=/tmp/kubeconfig.yaml -n harita
+          # --kubeconfig parametresi yerine env variable kullanalım (daha garantidir)
+          export KUBECONFIG=/tmp/kubeconfig.yaml
 
-          # Restart
-          kubectl rollout restart deployment/dogu-haritasi \
-            --kubeconfig=/tmp/kubeconfig.yaml -n harita
-            
-          echo "✅ BAŞARILI!"
+          # Node'ları listele (Bağlantı testi)
+          echo "Bağlantı Testi:"
+          kubectl get nodes || { echo "❌ Sunucuya bağlanılamadı!"; exit 1; }
+
+          # Güncelleme
+          kubectl set image deployment/dogu-haritasi web=${NEW_IMAGE_DIGEST} -n harita
+          kubectl rollout restart deployment/dogu-haritasi -n harita
+          
+          echo "🚀 Deploy Başarılı!"
