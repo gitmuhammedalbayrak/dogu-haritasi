@@ -50,8 +50,9 @@ jobs:
 
       - name: Kubernetes'e Deploy Et ve Güncelle
         run: |
-          # 1. Kubeconfig içeriğini dosyaya yazar
-          echo "${{ secrets.KUBE_CONFIG }}" > /tmp/kubeconfig.yaml
+          # 1. Kubeconfig içeriğini dosyaya yazar (base64 decode)
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > /tmp/kubeconfig.yaml
+          chmod 600 /tmp/kubeconfig.yaml
           
           # 2. Yeni imaj Digest'ini alır
           NEW_IMAGE_DIGEST="git.konstantiniyye.studio/admin/dogu@${{ steps.docker_build.outputs.digest }}"
