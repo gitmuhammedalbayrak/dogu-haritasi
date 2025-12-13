@@ -6,9 +6,6 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     
-    # ⚠️ ÇÖZÜM: DOCKER_HOST ENV AYARINI KALDIRIYORUZ! 
-    # Runner, kendi iç mekanizmasıyla otomatik TCP bağlantısını kuracaktır (Sizin stabil ayarınız).
-    
     steps:
       - name: Kodu Çek (Checkout)
         uses: actions/checkout@v3
@@ -26,7 +23,7 @@ jobs:
           username: patron
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # PUSH ADIMI: İmajın kimliğini (digest) çıktı olarak alıyoruz. (-kontrol için ek-)
+      # PUSH ADIMI
       - name: Docker Build ve Push
         id: docker_build
         uses: docker/build-push-action@v5
@@ -38,32 +35,29 @@ jobs:
           cache-to: type=gha,mode=max
 
       # -----------------------------------------------------------------
-      # CD KISMI (Final Çözüm)
+      # CD KISMI
       # -----------------------------------------------------------------
-      # NOT: Kubernetes deployment'ını kullanmak için kubeconfig'i güncellemelisin
-      # Kubeconfig'teki server adresi 127.0.0.1:6443 yerine gerçek IP olmalı
-      # Komut: cat ~/.kube/config | sed 's/127.0.0.1/<REAL_IP>/g' | base64
       
-      # - name: Kubectl Binary Kurulumu
-      #   # ARM64 uyumlu kubectl'i kurar
-      #   run: |
-      #     curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl"
-      #     chmod +x kubectl
-      #     sudo mv kubectl /usr/local/bin/
+      # Kubectl'i mimariye uygun otomatik kuran action
+      - name: Kubectl Kurulumu
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
 
-      # - name: Kubernetes'e Deploy Et ve Güncelle
-      #   run: |
-      #     # 1. Kubeconfig içeriğini dosyaya yazar (base64 decode)
-      #     echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > /tmp/kubeconfig.yaml
-      #     chmod 600 /tmp/kubeconfig.yaml
-      #     
-      #     # 2. Yeni imaj Digest'ini alır
-      #     NEW_IMAGE_DIGEST="git.konstantiniyye.studio/admin/dogu@${{ steps.docker_build.outputs.digest }}"
+      - name: Kubernetes'e Deploy Et ve Güncelle
+        run: |
+          # 1. Kubeconfig dosyasını oluştur
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > /tmp/kubeconfig.yaml
+          chmod 600 /tmp/kubeconfig.yaml
+          
+          # 2. Yeni imaj Digest'ini al
+          NEW_IMAGE_DIGEST="git.konstantiniyye.studio/admin/dogu@${{ steps.docker_build.outputs.digest }}"
+          echo "Deploying image: $NEW_IMAGE_DIGEST"
 
-      #     # 3. TLS kontrolünü atlayarak Deployment'ı günceller (Rancher Self-Signed Fix)
-      #     # NOT: Kubeconfig'inize insecure-skip-tls-verify: true eklediyseniz, bu satırlar çalışacaktır.
-      #     kubectl set image deployment/dogu-haritasi web=${NEW_IMAGE_DIGEST} \
-      #       --kubeconfig=/tmp/kubeconfig.yaml -n harita
-      #       
-      #     kubectl rollout restart deployment/dogu-haritasi \
-      #       --kubeconfig=/tmp/kubeconfig.yaml -n harita
+          # 3. İmajı set et (Rancher/K8s güncellemesi)
+          kubectl set image deployment/dogu-haritasi web=${NEW_IMAGE_DIGEST} \
+            --kubeconfig=/tmp/kubeconfig.yaml -n harita
+
+          # 4. Rollout restart ile podları yenile
+          kubectl rollout restart deployment/dogu-haritasi \
+            --kubeconfig=/tmp/kubeconfig.yaml -n harita
