@@ -1,114 +1,109 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doğu Yönelimli Dünya Haritası | Tarihsel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Doğu Yönelimli İnteraktif Dünya Haritası | Modern Küresel Perspektif</title>
+    
+    <!-- D3.js ve TopoJSON -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
-    <!-- Cinzel Decorative for titles, IM Fell English for body to give antique feel -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=IM+Fell+English:ital@0;1&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Modern Google Fonts & FontAwesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
     <style>
-        :root {
-            /* Historical / Parchment Theme */
-            --bg-color: #f0e6d2;
-            /* Parchment light */
-            --bg-texture: url('https://www.transparenttextures.com/patterns/aged-paper.png');
-            /* Optional texture feel via color/noise */
+        :root[data-theme="dark"] {
+            --bg-ocean: #090d16;
+            --land-fill: #131b2e;
+            --land-stroke: #1e293b;
+            --land-hover: #1e2d4a;
+            --graticule-stroke: rgba(56, 189, 248, 0.12);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-cyan: #38bdf8;
+            --accent-amber: #f59e0b;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --card-bg: rgba(15, 23, 42, 0.85);
+            --card-border: rgba(56, 189, 248, 0.2);
+            --compass-bg: rgba(15, 23, 42, 0.9);
+            --compass-border: #38bdf8;
+            --route-maritime: #38bdf8;
+            --route-silk: #f59e0b;
+            --glow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
 
-            --ocean-fill: #d4e4e8;
-            /* Faded vintage blue */
+        :root[data-theme="light"] {
+            --bg-ocean: #e2e8f0;
+            --land-fill: #ffffff;
+            --land-stroke: #cbd5e1;
+            --land-hover: #f1f5f9;
+            --graticule-stroke: rgba(100, 116, 139, 0.15);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent-cyan: #0284c7;
+            --accent-amber: #d97706;
+            --accent-emerald: #059669;
+            --accent-rose: #e11d48;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --card-border: rgba(203, 213, 225, 0.8);
+            --compass-bg: rgba(255, 255, 255, 0.95);
+            --compass-border: #0284c7;
+            --route-maritime: #0284c7;
+            --route-silk: #d97706;
+            --glow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        :root[data-theme="vintage"] {
+            --bg-ocean: #d4e4e8;
             --land-fill: #e8dcc5;
-            /* Paper/Land color */
             --land-stroke: #8b7355;
-            /* Brown ink */
+            --land-hover: #dfceb1;
+            --graticule-stroke: rgba(139, 115, 85, 0.25);
+            --text-main: #2c1810;
+            --text-muted: #5d4037;
+            --accent-cyan: #1d4e89;
+            --accent-amber: #8b0000;
+            --accent-emerald: #2d6a4f;
+            --accent-rose: #8b0000;
+            --card-bg: rgba(240, 230, 210, 0.92);
+            --card-border: rgba(139, 115, 85, 0.4);
+            --compass-bg: #fdfbf7;
+            --compass-border: #8b7355;
+            --route-maritime: #1d4e89;
+            --route-silk: #8b0000;
+            --glow: 0 4px 15px rgba(93, 64, 55, 0.15);
+        }
 
-            --text-primary: #2c1810;
-            /* Dark brown ink */
-            --text-secondary: #5d4037;
-            /* Lighter brown */
-
-            --accent-color: #8b0000;
-            /* Deep red for cities/compass */
-
-            --graticule-stroke: #b0a493;
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         body {
             margin: 0;
             padding: 0;
-            font-family: 'IM Fell English', serif;
-            background-color: var(--bg-color);
-            /* Simple noise texture for paper effect */
-            background-image: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.2)), url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
-            color: var(--text-primary);
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            background-color: var(--bg-ocean);
+            color: var(--text-main);
             height: 100vh;
-            display: flex;
-            flex-direction: column;
+            width: 100vw;
             overflow: hidden;
-        }
-
-        /* Header directly on background */
-        header {
-            position: absolute;
-            top: 20px;
-            left: 40px;
-            z-index: 10;
-            pointer-events: none;
-            /* Let clicks pass through to map if needed */
-        }
-
-        h1 {
-            margin: 0;
-            font-family: 'Cinzel Decorative', cursive;
-            font-weight: 700;
-            font-size: 1.3rem;
-            color: var(--text-primary);
-            text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.5);
-            letter-spacing: 1px;
-        }
-
-        .subtitle {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            font-style: italic;
-            margin-top: 5px;
-            border-top: 1px solid var(--text-secondary);
-            display: inline-block;
-            padding-top: 5px;
-        }
-
-        /* Tablet Responsive Typography */
-        @media (min-width: 481px) {
-            h1 {
-                font-size: 1.8rem;
-            }
-
-            .subtitle {
-                font-size: 0.9rem;
-            }
-        }
-
-        /* Desktop Responsive Typography */
-        @media (min-width: 769px) {
-            h1 {
-                font-size: 2.5rem;
-            }
-
-            .subtitle {
-                font-size: 1.1rem;
-            }
+            transition: background-color 0.4s ease, color 0.4s ease;
         }
 
         #map-wrapper {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-            overflow: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             cursor: grab;
         }
 
@@ -122,662 +117,1076 @@
             display: block;
         }
 
-        /* Map Styles */
-        .ocean-bg {
-            fill: var(--ocean-fill);
-            opacity: 0.4;
-        }
-
+        /* Map vector paths */
         .country {
             fill: var(--land-fill);
             stroke: var(--land-stroke);
             stroke-width: 0.5;
-            transition: fill 0.3s ease;
+            transition: fill 0.2s ease, stroke 0.2s ease;
         }
 
         .country:hover {
-            fill: #dccbb0;
-            /* Slightly darker parchment */
-            stroke: #5d4037;
-            stroke-width: 1;
+            fill: var(--land-hover);
         }
 
         .graticule {
             fill: none;
             stroke: var(--graticule-stroke);
             stroke-width: 0.5;
-            stroke-dasharray: 4, 4;
-            opacity: 0.6;
+            stroke-dasharray: 3, 3;
+            pointer-events: none;
         }
 
-        .city {
-            fill: var(--accent-color);
+        /* Trade Routes */
+        .route-maritime {
+            fill: none;
+            stroke: var(--route-maritime);
+            stroke-width: 1.5;
+            stroke-dasharray: 4, 3;
+            opacity: 0.85;
+            animation: dashPulse 25s linear infinite;
+        }
+
+        .route-silk {
+            fill: none;
+            stroke: var(--route-silk);
+            stroke-width: 1.8;
+            stroke-dasharray: 6, 4;
+            opacity: 0.85;
+        }
+
+        @keyframes dashPulse {
+            to {
+                stroke-dashoffset: -200;
+            }
+        }
+
+        /* Markers */
+        .city-marker {
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .city-marker:hover circle {
             stroke: #fff;
-            stroke-width: 0.5;
+            stroke-width: 1.5;
+            r: 5;
         }
 
-        /* Removed city-pulse as requested */
+        .chokepoint-marker {
+            cursor: pointer;
+        }
+
+        .chokepoint-marker:hover circle {
+            fill: var(--accent-rose);
+            r: 6;
+        }
 
         .city-label {
-            font-family: 'IM Fell English', serif;
-            font-size: 6px;
-            fill: var(--text-primary);
-            font-weight: bold;
-            text-shadow:
-                -1px -1px 0 #f0e6d2,
-                1px -1px 0 #f0e6d2,
-                -1px 1px 0 #f0e6d2,
-                1px 1px 0 #f0e6d2;
-            /* Halo effect for readability */
-            pointer-events: none;
-        }
-
-        .ocean-label {
-            font-family: 'Cinzel Decorative', cursive;
-            font-size: 9px;
-            fill: #6b8c96;
-            /* Muted blue text */
-            font-weight: 700;
-            opacity: 0.7;
-            letter-spacing: 1px;
-            pointer-events: none;
-        }
-
-        .continent-label {
-            font-family: 'Cinzel Decorative', cursive;
             font-size: 10px;
-            fill: #5d4037;
-            /* Brown */
-            font-weight: 900;
-            opacity: 0.8;
-            letter-spacing: 1px;
+            font-weight: 600;
+            fill: var(--text-main);
             pointer-events: none;
-            text-transform: uppercase;
-            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+            paint-order: stroke fill;
+            stroke: var(--bg-ocean);
+            stroke-width: 2.5px;
+            stroke-linejoin: round;
         }
 
-        /* Tablet Responsive Labels */
-        @media (min-width: 481px) {
-            .city-label {
-                font-size: 8px;
-            }
-
-            .ocean-label {
-                font-size: 11px;
-                letter-spacing: 1px;
-            }
-
-            .continent-label {
-                font-size: 12px;
-                letter-spacing: 1px;
-            }
+        .chokepoint-label {
+            font-size: 9px;
+            font-weight: 700;
+            fill: var(--accent-rose);
+            pointer-events: none;
+            paint-order: stroke fill;
+            stroke: var(--bg-ocean);
+            stroke-width: 2.5px;
+            letter-spacing: 0.5px;
         }
 
-        /* Desktop Responsive Labels */
-        @media (min-width: 769px) {
-            .city-label {
-                font-size: 12px;
-            }
-
-            .ocean-label {
-                font-size: 18px;
-                letter-spacing: 3px;
-            }
-
-            .continent-label {
-                font-size: 22px;
-                letter-spacing: 4px;
-            }
+        /* Glassmorphic UI Containers */
+        .glass-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            box-shadow: var(--glow);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* Controls - Antique Style */
-        .controls {
+        /* Header Brand & Top Bar */
+        header {
             position: absolute;
-            bottom: 12px;
-            right: 12px;
-            display: flex;
-            flex-direction: row;
-            gap: 6px;
+            top: 16px;
+            left: 20px;
             z-index: 100;
+            pointer-events: auto;
+            max-width: calc(100vw - 40px);
         }
 
-        .btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid var(--land-stroke);
-            background: #fdfbf7;
-            color: var(--text-primary);
+        .header-content {
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-amber));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .brand-text h1 {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-text .sub {
+            margin: 0;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Search Bar */
+        .search-container {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            width: 320px;
+            max-width: calc(100vw - 160px);
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            padding: 8px 14px;
+            gap: 10px;
+        }
+
+        .search-box i {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            width: 100%;
+            font-family: inherit;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 48px;
+            left: 0;
+            right: 0;
+            max-height: 240px;
+            overflow-y: auto;
+            display: none;
+            padding: 6px;
+            z-index: 101;
+        }
+
+        .search-item {
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.15s ease;
+        }
+
+        .search-item:hover {
+            background: rgba(56, 189, 248, 0.15);
+        }
+
+        /* Orientation Selector & Compass Box */
+        .orientation-dock {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .orientation-pills {
+            display: flex;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .pill-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pill-btn.active {
+            background: var(--accent-cyan);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(56, 189, 248, 0.4);
+        }
+
+        /* Compass Visualizer */
+        .compass-card {
+            width: 76px;
+            height: 76px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-            font-size: 1rem;
+            position: relative;
         }
 
-        .btn:hover {
-            background: #e8dcc5;
-            transform: translateY(-2px);
-            box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-            box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Tablet Responsive Controls */
-        @media (min-width: 481px) {
-            .controls {
-                bottom: 20px;
-                right: 20px;
-                gap: 8px;
-            }
-
-            .btn {
-                width: 48px;
-                height: 48px;
-                font-size: 1.2rem;
-            }
-        }
-
-        /* Desktop Responsive Controls */
-        @media (min-width: 769px) {
-            .controls {
-                bottom: 40px;
-                right: 40px;
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .btn {
-                width: 45px;
-                height: 45px;
-                font-size: 1.2rem;
-            }
-        }
-
-        /* Tooltip - Parchment Style */
-        #tooltip {
-            position: absolute;
-            padding: 5px 8px;
-            background: #fdfbf7;
-            border: 1px solid var(--land-stroke);
-            border-radius: 4px;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s;
-            font-family: 'IM Fell English', serif;
-            font-size: 0.75rem;
-            color: var(--text-primary);
-            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            max-width: 100px;
-            word-wrap: break-word;
-        }
-
-        /* Tablet Responsive Tooltip */
-        @media (min-width: 481px) {
-            #tooltip {
-                font-size: 0.85rem;
-                padding: 6px 10px;
-                max-width: 150px;
-            }
-        }
-
-        /* Desktop Responsive Tooltip */
-        @media (min-width: 769px) {
-            #tooltip {
-                font-size: 1rem;
-                padding: 8px 12px;
-                max-width: 200px;
-            }
-        }
-
-        /* Compass - Antique Rose */
-        .compass-group text {
-            font-family: 'Cinzel Decorative', cursive;
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        .loading-overlay {
-            position: absolute;
-            inset: 0;
-            background: var(--bg-color);
+        .compass-dial {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            border: 2px solid var(--compass-border);
             display: flex;
-            justify-content: center;
             align-items: center;
-            z-index: 200;
-            transition: opacity 0.8s ease;
+            justify-content: center;
+            position: relative;
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .loader-text {
-            font-family: 'Cinzel Decorative', cursive;
-            font-size: 2rem;
-            color: var(--text-primary);
-            animation: fadePulse 2s infinite;
+        .compass-needle {
+            width: 4px;
+            height: 38px;
+            position: relative;
         }
 
-        @keyframes fadePulse {
-            0% {
-                opacity: 0.4;
-            }
+        .needle-north {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-bottom: 19px solid var(--accent-rose);
+        }
 
-            50% {
-                opacity: 1;
-            }
+        .needle-south {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 19px solid var(--text-muted);
+        }
 
-            100% {
-                opacity: 0.4;
+        .compass-letter {
+            position: absolute;
+            font-size: 8px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .letter-e { top: 2px; left: 50%; transform: translateX(-50%); color: var(--accent-rose); font-weight: 900; }
+        .letter-w { bottom: 2px; left: 50%; transform: translateX(-50%); }
+        .letter-n { left: 3px; top: 50%; transform: translateY(-50%); }
+        .letter-s { right: 3px; top: 50%; transform: translateY(-50%); }
+
+        /* Left Action / Layer Controls */
+        .layers-drawer {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .layer-title {
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .layer-item input[type="checkbox"] {
+            accent-color: var(--accent-cyan);
+            cursor: pointer;
+        }
+
+        /* Bottom Controls (Zoom & Theme) */
+        .bottom-right-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--glow);
+            font-size: 15px;
+            transition: transform 0.15s ease, background 0.2s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            background: var(--land-hover);
+        }
+
+        /* Detail Modal / Info Drawer */
+        .info-card {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            z-index: 110;
+            width: 320px;
+            padding: 16px;
+            display: none;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .info-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .info-tag {
+            font-size: 0.68rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: rgba(56, 189, 248, 0.2);
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .info-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.45;
+            margin: 8px 0 12px 0;
+        }
+
+        .info-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            border-top: 1px solid var(--card-border);
+            padding-top: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 0.82rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .search-container {
+                display: none;
             }
+            .layers-drawer {
+                bottom: 74px;
+                left: 12px;
+                padding: 10px 12px;
+            }
+            .header-content {
+                padding: 6px 12px;
+            }
+            .brand-text h1 {
+                font-size: 0.85rem;
+            }
+            .orientation-pills .pill-btn {
+                padding: 5px 8px;
+                font-size: 0.68rem;
+            }
+            .info-card {
+                left: 12px;
+                right: 12px;
+                width: auto;
+                bottom: 80px;
+            }
+        }
+
+        /* Loader */
+        .loader-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-ocean);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            transition: opacity 0.6s ease;
+        }
+
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border: 3px solid rgba(56, 189, 248, 0.2);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 
 <body>
 
-    <div class="loading-overlay" id="loader">
-        <div class="loader-text">Harita Hazırlanıyor...</div>
+    <!-- Yükleniyor Ekranı -->
+    <div class="loader-overlay" id="loader">
+        <div class="spinner"></div>
+        <div style="margin-top: 14px; font-weight: 700; font-size: 0.9rem; letter-spacing: 0.5px;">Küresel Ağ Yükleniyor...</div>
     </div>
 
+    <!-- Üst Başlık -->
     <header>
-        <h1>Doğu Yönelimli Dünya Haritası</h1>
-        <div class="subtitle">Tarihsel Perspektif</div>
+        <div class="glass-panel header-content">
+            <div class="brand-badge">
+                <i class="fa-solid fa-compass-drafting"></i>
+            </div>
+            <div class="brand-text">
+                <h1>Doğu Yönelimli Dünya Haritası <span style="font-size: 0.7rem; padding: 2px 6px; border-radius: 6px; background: rgba(56, 189, 248, 0.2); color: var(--accent-cyan);">V1.2</span></h1>
+                <p class="sub">Doğu-Yukarı & Küresel Ticaret Koridorları</p>
+            </div>
+        </div>
     </header>
 
+    <!-- Arama Çubuğu -->
+    <div class="search-container">
+        <div class="glass-panel search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="search-input" placeholder="Şehir, boğaz veya koridor ara..." autocomplete="off">
+            <i class="fa-solid fa-xmark" id="search-clear" style="cursor: pointer; display: none;"></i>
+        </div>
+        <div class="glass-panel search-results" id="search-results"></div>
+    </div>
+
+    <!-- Yönelim ve Pusula Paneli -->
+    <div class="orientation-dock">
+        <div class="glass-panel orientation-pills">
+            <button class="pill-btn active" data-angle="-90" title="Doğu Yukarı (Antik Orient)">Doğu (90°)</button>
+            <button class="pill-btn" data-angle="0" title="Kuzey Yukarı (Modern Standart)">Kuzey (0°)</button>
+            <button class="pill-btn" data-angle="180" title="Güney Yukarı (İslam Haritacılığı)">Güney (180°)</button>
+            <button class="pill-btn" data-angle="90" title="Batı Yukarı">Batı (270°)</button>
+        </div>
+
+        <div class="glass-panel compass-card" id="compass-card" title="Tıkla: Yönü Sıfırla / Döndür">
+            <div class="compass-dial" id="compass-dial">
+                <span class="compass-letter letter-e">D</span>
+                <span class="compass-letter letter-w">B</span>
+                <span class="compass-letter letter-n">K</span>
+                <span class="compass-letter letter-s">G</span>
+                <div class="compass-needle">
+                    <div class="needle-north"></div>
+                    <div class="needle-south"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Harita Alanı -->
     <div id="map-wrapper">
-        <div id="tooltip"></div>
         <svg id="map"></svg>
     </div>
 
-    <div class="controls">
-        <button class="btn" id="zoom-in" title="Yakınlaştır"><i class="fa-solid fa-plus"></i></button>
-        <button class="btn" id="zoom-out" title="Uzaklaştır"><i class="fa-solid fa-minus"></i></button>
-        <button class="btn" id="reset" title="Sıfırla"><i class="fa-solid fa-compress"></i></button>
+    <!-- Katman Kontrolleri -->
+    <div class="glass-panel layers-drawer">
+        <div class="layer-title">Katman Filtreleri</div>
+        <label class="layer-item">
+            <input type="checkbox" id="layer-chokepoints" checked>
+            <span>Stratejik Boğazlar & Kanallar</span>
+        </label>
+        <label class="layer-item">
+            <input type="checkbox" id="layer-maritime" checked>
+            <span>Modern Deniz Koridorları</span>
+        </label>
+        <label class="layer-item">
+            <input type="checkbox" id="layer-silk" checked>
+            <span>Tarihi İpek Yolu Ağı</span>
+        </label>
+        <label class="layer-item">
+            <input type="checkbox" id="layer-cities" checked>
+            <span>Küresel Finans & Mega Şehirler</span>
+        </label>
+        <label class="layer-item">
+            <input type="checkbox" id="layer-graticule" checked>
+            <span>Enlem / Boylam Ağı</span>
+        </label>
+    </div>
+
+    <!-- Alt Sağ Kontroller (Zoom & Tema) -->
+    <div class="bottom-right-controls">
+        <button class="action-btn" id="btn-theme" title="Temayı Değiştir (Karanlık / Açık / Parşömen)">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+        <button class="action-btn" id="btn-zoom-in" title="Yakınlaştır">
+            <i class="fa-solid fa-plus"></i>
+        </button>
+        <button class="action-btn" id="btn-zoom-out" title="Uzaklaştır">
+            <i class="fa-solid fa-minus"></i>
+        </button>
+        <button class="action-btn" id="btn-reset" title="Görünümü Sıfırla">
+            <i class="fa-solid fa-arrows-rotate"></i>
+        </button>
+    </div>
+
+    <!-- Detay Bilgi Kartı -->
+    <div class="glass-panel info-card" id="info-card">
+        <div class="info-header">
+            <div>
+                <h3 class="info-title" id="info-title">-</h3>
+                <span class="info-tag" id="info-type">-</span>
+            </div>
+            <button style="background: none; border: none; color: var(--text-muted); cursor: pointer;" id="info-close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <p class="info-desc" id="info-desc">-</p>
+        <div class="info-stats">
+            <div class="stat-item">
+                <span class="stat-label">Koordinatlar</span>
+                <span class="stat-value" id="stat-coords">-</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Stratejik Rol</span>
+                <span class="stat-value" id="stat-role">-</span>
+            </div>
+            <div class="stat-item" style="margin-top: 6px;">
+                <span class="stat-label">Canlı Yerel Saat</span>
+                <span class="stat-value" id="stat-time">-</span>
+            </div>
+            <div class="stat-item" style="margin-top: 6px;">
+                <span class="stat-label">Trafik / Nüfus</span>
+                <span class="stat-value" id="stat-metric">-</span>
+            </div>
+        </div>
     </div>
 
     <script>
+        // =========================================================================
+        // 1. VERİ TANIMLAMALARI (Stratejik Boğazlar, Şehirler, Rotalar)
+        // =========================================================================
+        const CHOKEPOINTS = [
+            { id: "suez", name: "Süveyş Kanalı", coords: [32.34, 30.60], type: "Deniz Kanalı", desc: "Küresel deniz ticaretinin %12'sinin ve konteyner hacminin %30'unun geçtiği, Asya ile Avrupa arasındaki en kritik suyolu.", role: "Küresel Konteyner Ana Damarı", traffic: "~50 Gemi / Gün", tz: 2 },
+            { id: "malacca", name: "Malakka Boğazı", coords: [101.35, 2.50], type: "Stratejik Boğaz", desc: "Doğu Asya ve Çin ekonomisini Orta Doğu petrolüne ve Avrupa pazarlarına bağlayan dünyanın en yoğun boğazı.", role: "Enerji & Ticaret Boğazı", traffic: "~90.000 Gemi / Yıl", tz: 8 },
+            { id: "hormuz", name: "Hürmüz Boğazı", coords: [56.40, 26.56], type: "Enerji Koridoru", desc: "Dünya petrol tüketiminin beşte birinin (~21 milyon varil/gün) geçtiği en kritik jeopolitik enerji darboğazı.", role: "Global Petrol Kilidi", traffic: "~21M Varil / Gün", tz: 4 },
+            { id: "mandeb", name: "Babülmendep Boğazı", coords: [43.33, 12.58], type: "Stratejik Boğaz", desc: "Kızıldeniz'in Aden Körfezi çıkış kapısı. Süveyş Kanalı rotasının ayrılmaz ve hassas güvenlik noktası.", role: "Kızıldeniz Girişi", traffic: "Kritik Yük Hattı", tz: 3 },
+            { id: "panama", name: "Panama Kanalı", coords: [-79.91, 9.10], type: "Kanal", desc: "Atlantik ile Pasifik Okyanusunu bağlayarak gemilerin Güney Amerika'yı dolaşmasını engelleyen mühendislik harikası.", role: "Trans-Okyanus Geçişi", traffic: "~14.000 Gemi / Yıl", tz: -5 },
+            { id: "straits", name: "İstanbul & Çanakkale Boğazları", coords: [29.04, 41.12], type: "Doğal Boğazlar", desc: "Karadeniz havzasını Akdeniz ve dünya ticaretine bağlayan; tahıl, petrol ve emtia naklinin kalbi.", role: "Karadeniz Anahtarı", traffic: "~40.000 Gemi / Yıl", tz: 3 },
+            { id: "gibraltar", name: "Cebelitarık Boğazı", coords: [-5.60, 35.98], type: "Doğal Boğaz", desc: "Akdeniz'i Atlantik Okyanusu'na bağlayan, antik çağlardan beri kontrolü elinde tutan güçlere stratejik üstünlük sağlayan boğaz.", role: "Akdeniz Atlantik Kapısı", traffic: "~100.000 Gemi / Yıl", tz: 1 }
+        ];
+
+        const GLOBAL_HUBS = [
+            { name: "İstanbul", coords: [28.98, 41.01], role: "Avrasya Finans & Lojistik", metric: "15.9M Nüfus", tz: 3, desc: "İki kıtayı birleştiren, tarihi İpek Yolu'nun bitişi ve modern hava/deniz koridorlarının merkez üssü." },
+            { name: "Tokyo", coords: [139.69, 35.69], role: "Mega Finans & Teknoloji", metric: "37.4M Nüfus", tz: 9, desc: "Dünyanın en büyük metropol ekonomisi, Asya-Pasifik ticaretinin en köklü başkenti." },
+            { name: "Şanghay", coords: [121.47, 31.23], role: "Dünyanın En Büyük Limanı", metric: "29.8M Nüfus", tz: 8, desc: "Konteyner hacminde dünya birincisi, Çin imalat sanayisinin küresel açılış kapısı." },
+            { name: "Singapur", coords: [103.82, 1.35], role: "Global Aktarma & Finans", metric: "5.9M Nüfus", tz: 8, desc: "Malakka Boğazı üzerinde dünya deniz ticaretinin ve serbest pazarın kilit noktası." },
+            { name: "Dubai", coords: [55.27, 25.20], role: "Orta Doğu Lojistik Merkezi", metric: "3.6M Nüfus", tz: 4, desc: "Havacılık, serbest bölgeler ve küresel transit ticaretin modern vahası." },
+            { name: "Londra", coords: [-0.13, 51.51], role: "Küresel Finans Sermayesi", metric: "9.6M Nüfus", tz: 0, desc: "Greenwich meridyeninin kalbi, uluslararası sigorta, denizcilik ve döviz piyasalarının merkezi." },
+            { name: "New York", coords: [-74.01, 40.71], role: "Dünya Sermaye Piyasaları", metric: "19.5M Nüfus", tz: -5, desc: "Wall Street ve küresel sermaye akışının yönlendirildiği dev finans merkezi." },
+            { name: "Frankfurt", coords: [8.68, 50.11], role: "Avrupa Merkez Bankası Üssü", metric: "2.3M Nüfus", tz: 1, desc: "Euro Bölgesi para politikasının ve kıta Avrupası transit demiryolu/hava ağının kalbi." },
+            { name: "Pekin", coords: [116.41, 39.90], role: "Siyasi & Yatırım Merkezi", metric: "21.5M Nüfus", tz: 8, desc: "Kuşak ve Yol Girişimi'nin (BRI) stratejik ve finansal karar merkezi." }
+        ];
+
+        // Modern Deniz Koridorları (Koordinat dizileri)
+        const MARITIME_ROUTES = [
+            // Asya - Avrupa Ana Hattı (Şanghay -> Malakka -> Babülmendep -> Süveyş -> Cebelitarık -> Rotterdam)
+            [[121.47, 31.23], [115.0, 15.0], [101.35, 2.50], [80.0, 6.0], [60.0, 12.0], [43.33, 12.58], [32.34, 30.60], [20.0, 36.0], [-5.60, 35.98], [-9.0, 42.0], [4.4, 51.9]],
+            // Trans-Pasifik Hattı (Şanghay/Tokyo -> Los Angeles)
+            [[121.47, 31.23], [139.69, 35.69], [170.0, 38.0], [-160.0, 38.0], [-118.24, 34.05]],
+            // Hürmüz Petrol Hattı (Hürmüz -> Doğu Asya)
+            [[56.40, 26.56], [65.0, 20.0], [80.0, 6.0], [101.35, 2.50]],
+            // Trans-Atlantik Hattı (Rotterdam -> New York)
+            [[4.4, 51.9], [-10.0, 50.0], [-40.0, 45.0], [-74.01, 40.71]],
+            // Panama Koridoru (New York -> Panama -> Şanghay)
+            [[-74.01, 40.71], [-75.0, 25.0], [-79.91, 9.10], [-110.0, 10.0], [-150.0, 15.0], [140.0, 20.0], [121.47, 31.23]]
+        ];
+
+        // Tarihi İpek Yolu (Kara Ağı)
+        const SILK_ROAD_ROUTES = [
+            [[108.94, 34.26], [94.66, 40.14], [75.98, 39.46], [66.97, 39.65], [62.19, 37.60], [51.42, 35.68], [46.29, 38.08], [28.98, 41.01], [12.33, 45.44]],
+            [[66.97, 39.65], [60.63, 41.56], [50.0, 45.0], [39.7, 47.2], [28.98, 41.01]]
+        ];
+
+        // =========================================================================
+        // 2. D3 & SVG KURULUMU
+        // =========================================================================
         const mapContainer = document.getElementById('map-wrapper');
-        const width = mapContainer.clientWidth;
-        const height = mapContainer.clientHeight;
+        let width = mapContainer.clientWidth;
+        let height = mapContainer.clientHeight;
+        let currentAngle = -90; // Varsayılan: Doğu-Yukarı
 
         const svg = d3.select("#map")
             .attr("width", "100%")
             .attr("height", "100%")
             .attr("viewBox", [0, 0, width, height]);
 
-        // Detect touch device
-        const isTouchDevice = () => {
-            return (('ontouchstart' in window) ||
-                    (navigator.maxTouchPoints > 0) ||
-                    (navigator.msMaxTouchPoints > 0));
-        };
-
-        // Get initial font sizes from CSS
-        const getBaseFontSizes = () => {
-            const tempCity = document.createElement('text');
-            tempCity.className = 'city-label';
-            tempCity.textContent = 'test';
-            document.body.appendChild(tempCity);
-            const citySize = parseFloat(window.getComputedStyle(tempCity).fontSize);
-            document.body.removeChild(tempCity);
-
-            const tempOcean = document.createElement('text');
-            tempOcean.className = 'ocean-label';
-            tempOcean.textContent = 'test';
-            document.body.appendChild(tempOcean);
-            const oceanSize = parseFloat(window.getComputedStyle(tempOcean).fontSize);
-            document.body.removeChild(tempOcean);
-
-            const tempContinent = document.createElement('text');
-            tempContinent.className = 'continent-label';
-            tempContinent.textContent = 'test';
-            document.body.appendChild(tempContinent);
-            const continentSize = parseFloat(window.getComputedStyle(tempContinent).fontSize);
-            document.body.removeChild(tempContinent);
-
-            return { citySize, oceanSize, continentSize };
-        };
-
-        const baseFontSizes = getBaseFontSizes();
-
-        // Background for Ocean (Full SVG)
+        // Arka Plan Deniz Alanı
         svg.append("rect")
             .attr("width", "100%")
             .attr("height", "100%")
-            .attr("class", "ocean-bg");
+            .attr("fill", "transparent");
 
-        // Group for map content (to be zoomed/panned)
-        const g = svg.append("g");
+        // Ana Taşıyıcı Grup (Zoom & Pan için)
+        const mainGroup = svg.append("g").attr("id", "main-group");
 
-        // Zoom behavior with touch support
-        const zoom = d3.zoom()
-            .scaleExtent([1, 8])
-            .on("zoom", (event) => {
-                g.attr("transform", event.transform);
-                // Keep markers consistent size visually, but let them scale a bit for effect
-                // or keep them fixed. For historical map, fixed stroke width is good.
-                const k = event.transform.k;
-                g.selectAll(".country").attr("stroke-width", 0.5 / k);
-                g.selectAll(".city").attr("r", 3 / k);
-                g.selectAll(".city").attr("stroke-width", 0.5 / k);
+        // Döndürülebilir Katman Grubu (Dinamik Yönelim için)
+        const rotatableGroup = mainGroup.append("g")
+            .attr("id", "rotatable-group")
+            .attr("transform", `rotate(${currentAngle}, ${width / 2}, ${height / 2})`);
 
-                // Scale text slightly but not fully, so it doesn't get huge or tiny
-                // Actually for readability, let's keep text size relatively constant
-                g.selectAll(".city-label").attr("font-size", baseFontSizes.citySize / k);
-                g.selectAll(".continent-label").attr("font-size", baseFontSizes.continentSize / k);
-                g.selectAll(".ocean-label").attr("font-size", baseFontSizes.oceanSize / k);
-            });
+        // Alt Katman Grupları
+        const graticuleGroup = rotatableGroup.append("g").attr("class", "layer-graticule");
+        const countriesGroup = rotatableGroup.append("g").attr("class", "layer-countries");
+        const routesGroup = rotatableGroup.append("g").attr("class", "layer-routes");
+        const markersGroup = rotatableGroup.append("g").attr("class", "layer-markers");
 
-        svg.call(zoom);
-
-        // Disable zoom on mobile double-tap by default
-        svg.on("dblclick.zoom", null);
-
-        // Projection
+        // Projeksiyon (Natural Earth)
         const projection = d3.geoNaturalEarth1()
-            .scale(width / 5.5)
+            .scale(width / 5.2)
             .center([0, 0])
             .translate([width / 2, height / 2]);
 
-        const path = d3.geoPath().projection(projection);
+        const pathGenerator = d3.geoPath().projection(projection);
 
-        // Tooltip
-        const tooltip = d3.select("#tooltip");
+        // Zoom & Pan Davranışı
+        const zoomBehavior = d3.zoom()
+            .scaleExtent([0.9, 12])
+            .on("zoom", (event) => {
+                mainGroup.attr("transform", event.transform);
+                const k = event.transform.k;
+                
+                // Ölçek değiştikçe çizgi kalınlıklarını ve metin boyutlarını orantıla
+                countriesGroup.selectAll(".country").attr("stroke-width", 0.5 / k);
+                routesGroup.selectAll("path").attr("stroke-width", d => (d.silk ? 1.8 : 1.5) / k);
+                markersGroup.selectAll(".city-marker circle").attr("r", 3.5 / k);
+                markersGroup.selectAll(".chokepoint-marker circle").attr("r", 4.5 / k);
+                markersGroup.selectAll(".city-label").style("font-size", `${10 / Math.pow(k, 0.4)}px`);
+                markersGroup.selectAll(".chokepoint-label").style("font-size", `${9 / Math.pow(k, 0.4)}px`);
+            });
 
-        // Data
-        const cities = [
-            { name: "Tokyo", coords: [139.69, 35.69] },
-            { name: "Delhi", coords: [77.10, 28.70] },
-            { name: "Şangay", coords: [121.47, 31.23] },
-            { name: "São Paulo", coords: [-46.63, -23.55] },
-            { name: "Meksiko", coords: [-99.13, 19.43] },
-            { name: "Kahire", coords: [31.24, 30.04] },
-            { name: "Mumbai", coords: [72.88, 19.08] },
-            { name: "Pekin", coords: [116.41, 39.90] },
-            { name: "New York", coords: [-74.01, 40.71] },
-            { name: "Londra", coords: [-0.13, 51.51] },
-            { name: "Paris", coords: [2.35, 48.86] },
-            { name: "Moskova", coords: [37.62, 55.76] },
-            { name: "Sidney", coords: [151.21, -33.87] },
-            { name: "Los Angeles", coords: [-118.24, 34.05] },
-            { name: "Singapur", coords: [103.82, 1.35] },
-            { name: "İstanbul", coords: [28.98, 41.01] },
-            { name: "Buenos Aires", coords: [-58.38, -34.60] },
-            { name: "Lagos", coords: [3.38, 6.52] },
-            { name: "Bangkok", coords: [100.50, 13.76] },
-            { name: "Cape Town", coords: [18.42, -33.92] }
-        ];
+        svg.call(zoomBehavior);
+        svg.on("dblclick.zoom", null); // Çift tıklama zoom'unu engelle
 
-        const oceans = [
-            { name: "Pasifik Okyanusu", coords: [180, 0] },
-            { name: "Pasifik Okyanusu", coords: [-160, 0] },
-            { name: "Atlantik Okyanusu", coords: [-30, 15] },
-            { name: "Hint Okyanusu", coords: [80, -15] },
-            { name: "Arktik Okyanusu", coords: [0, 80] }
-        ];
+        // =========================================================================
+        // 3. VERİLERİ HARİTAYA ÇİZME
+        // =========================================================================
+        d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then(world => {
+            // Yükleme ekranını kaldır
+            const loader = document.getElementById('loader');
+            loader.style.opacity = '0';
+            setTimeout(() => loader.remove(), 600);
 
-        const continents = [
-            { name: "Asya", coords: [95, 35] },
-            { name: "Afrika", coords: [20, 5] },
-            { name: "Avrupa", coords: [25, 50] },
-            { name: "Kuzey Amerika", coords: [-100, 45] },
-            { name: "Güney Amerika", coords: [-60, -15] },
-            { name: "Avustralya", coords: [135, -25] },
-            { name: "Antarktika", coords: [25, -80] }
-        ];
+            const countries = topojson.feature(world, world.objects.countries);
+            const graticule = d3.geoGraticule();
 
-        // Load Data
-        d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
-            .then(world => {
-                // Remove loader
-                document.getElementById('loader').style.opacity = 0;
-                setTimeout(() => document.getElementById('loader').remove(), 800);
+            // 1. Graticule
+            graticuleGroup.append("path")
+                .datum(graticule)
+                .attr("class", "graticule")
+                .attr("d", pathGenerator);
 
-                const countries = topojson.feature(world, world.objects.countries);
-                const graticule = d3.geoGraticule();
+            // 2. Ülkeler
+            countriesGroup.selectAll(".country")
+                .data(countries.features)
+                .enter().append("path")
+                .attr("class", "country")
+                .attr("d", pathGenerator);
 
-                // Rotate Group for East Orientation (-90 degrees)
-                const rotatedGroup = g.append("g")
-                    .attr("transform", `rotate(-90, ${width / 2}, ${height / 2})`);
+            // 3. Rotalar
+            // Modern Deniz Koridorları
+            MARITIME_ROUTES.forEach(coords => {
+                const geoLine = { type: "LineString", coordinates: coords, silk: false };
+                routesGroup.append("path")
+                    .datum(geoLine)
+                    .attr("class", "route-maritime")
+                    .attr("d", pathGenerator);
+            });
 
-                // Graticule (Lines)
-                rotatedGroup.append("path")
-                    .datum(graticule)
-                    .attr("class", "graticule")
-                    .attr("d", path);
+            // Tarihi İpek Yolu
+            SILK_ROAD_ROUTES.forEach(coords => {
+                const geoLine = { type: "LineString", coordinates: coords, silk: true };
+                routesGroup.append("path")
+                    .datum(geoLine)
+                    .attr("class", "route-silk")
+                    .attr("d", pathGenerator);
+            });
 
-                // Countries
-                rotatedGroup.selectAll("path.country")
-                    .data(countries.features)
-                    .enter().append("path")
-                    .attr("class", "country")
-                    .attr("d", path)
-                    .on("mouseover", function (event, d) {
-                        if (!isTouchDevice()) {
-                            d3.select(this).style("fill", "#dccbb0");
-                            tooltip.transition().duration(200).style("opacity", 1);
-                            tooltip.html(d.properties.name)
-                                .style("left", (event.pageX + 15) + "px")
-                                .style("top", (event.pageY - 15) + "px");
-                        }
-                    })
-                    .on("mousemove", function (event) {
-                        if (!isTouchDevice()) {
-                            tooltip
-                                .style("left", (event.pageX + 15) + "px")
-                                .style("top", (event.pageY - 15) + "px");
-                        }
-                    })
-                    .on("mouseout", function () {
-                        if (!isTouchDevice()) {
-                            d3.select(this).style("fill", null);
-                            tooltip.transition().duration(500).style("opacity", 0);
-                        }
-                    })
-                    .on("touchstart", function (event, d) {
-                        event.preventDefault();
-                        d3.select(this).style("fill", "#dccbb0");
-                        tooltip.transition().duration(200).style("opacity", 1);
-                        tooltip.html(d.properties.name);
-                        
-                        const touch = event.touches[0];
-                        tooltip
-                            .style("left", (touch.pageX + 15) + "px")
-                            .style("top", (touch.pageY - 15) + "px");
-                    })
-                    .on("touchend", function () {
-                        d3.select(this).style("fill", null);
-                        tooltip.transition().duration(500).style("opacity", 0);
+            // 4. Stratejik Boğazlar (Chokepoints)
+            CHOKEPOINTS.forEach(choke => {
+                const pt = projection(choke.coords);
+                if (!pt) return;
+
+                const gChoke = markersGroup.append("g")
+                    .attr("class", "chokepoint-marker")
+                    .attr("transform", `translate(${pt[0]}, ${pt[1]})`)
+                    .on("click", (e) => {
+                        e.stopPropagation();
+                        showDetailCard(choke, "Stratejik Boğaz / Kanal");
                     });
 
-                // Labels helper function
-                // Added 'pointer-events: none' in CSS to ensure they don't block mouse events
-                const addLabels = (data, className, fontSize) => {
-                    const group = rotatedGroup.append("g");
-                    data.forEach(item => {
-                        const coords = projection(item.coords);
-                        if (coords) {
-                            group.append("text")
-                                .attr("class", className)
-                                .attr("x", coords[0])
-                                .attr("y", coords[1])
-                                .attr("text-anchor", "middle")
-                                .attr("transform", `rotate(90, ${coords[0]}, ${coords[1]})`)
-                                .text(item.name);
+                // Dış puls halkası
+                gChoke.append("circle")
+                    .attr("r", 7)
+                    .attr("fill", "rgba(244, 63, 94, 0.25)")
+                    .attr("stroke", "var(--accent-rose)")
+                    .attr("stroke-width", 0.8);
+
+                // İç nokta
+                gChoke.append("circle")
+                    .attr("r", 4.5)
+                    .attr("fill", "var(--accent-rose)");
+
+                // Başlık
+                gChoke.append("text")
+                    .attr("class", "chokepoint-label")
+                    .attr("x", 8)
+                    .attr("y", 3)
+                    // Harita açısına göre ters çevirme (yazıların dik kalması için)
+                    .attr("transform", `rotate(${-currentAngle})`)
+                    .text(choke.name);
+            });
+
+            // 5. Global Finans ve Mega Şehirler
+            GLOBAL_HUBS.forEach(city => {
+                const pt = projection(city.coords);
+                if (!pt) return;
+
+                const gCity = markersGroup.append("g")
+                    .attr("class", "city-marker")
+                    .attr("transform", `translate(${pt[0]}, ${pt[1]})`)
+                    .on("click", (e) => {
+                        e.stopPropagation();
+                        showDetailCard(city, "Küresel Hub & Finans Merkezi");
+                    });
+
+                gCity.append("circle")
+                    .attr("r", 3.5)
+                    .attr("fill", "var(--accent-cyan)")
+                    .attr("stroke", "#fff")
+                    .attr("stroke-width", 0.8);
+
+                gCity.append("text")
+                    .attr("class", "city-label")
+                    .attr("x", 6)
+                    .attr("y", 3)
+                    .attr("transform", `rotate(${-currentAngle})`)
+                    .text(city.name);
+            });
+        });
+
+        // =========================================================================
+        // 4. DİNAMİK YÖNELİM (ORIENTATION ENGINE) & PUSULA
+        // =========================================================================
+        function setOrientation(angle) {
+            currentAngle = angle;
+
+            // Harita grubunu pürüzsüzce döndür
+            rotatableGroup.transition()
+                .duration(1000)
+                .ease(d3.easeCubicOut)
+                .attr("transform", `rotate(${currentAngle}, ${width / 2}, ${height / 2})`);
+
+            // Şehir ve boğaz yazılarının okunaklı kalması için ters rotasyon uygula
+            markersGroup.selectAll(".city-label, .chokepoint-label")
+                .transition()
+                .duration(1000)
+                .ease(d3.easeCubicOut)
+                .attr("transform", `rotate(${-currentAngle})`);
+
+            // Pusula ibresini döndür (Haritadaki Kuzey'i işaret etmesi için)
+            // Doğu yukarı (-90) iken Kuzey solda (-90deg), Kuzey yukarıda (0) iken Kuzey yukarıda (0deg)
+            const compassAngle = angle;
+            document.getElementById('compass-dial').style.transform = `rotate(${compassAngle}deg)`;
+
+            // Buton aktiflik durumlarını güncelle
+            document.querySelectorAll('.pill-btn').forEach(btn => {
+                if (parseInt(btn.getAttribute('data-angle')) === angle) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Yön butonları olayları
+        document.querySelectorAll('.pill-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const angle = parseInt(btn.getAttribute('data-angle'));
+                setOrientation(angle);
+            });
+        });
+
+        // Pusula kartına tıklandığında bir sonraki yöne dön
+        document.getElementById('compass-card').addEventListener('click', () => {
+            const angles = [-90, 0, 180, 90];
+            let nextIndex = (angles.indexOf(currentAngle) + 1) % angles.length;
+            setOrientation(angles[nextIndex]);
+        });
+
+        // =========================================================================
+        // 5. DETAY BİLGİ KARTI & SAAT HESABI
+        // =========================================================================
+        const infoCard = document.getElementById('info-card');
+        document.getElementById('info-close').addEventListener('click', () => {
+            infoCard.style.display = 'none';
+        });
+
+        function showDetailCard(data, type) {
+            document.getElementById('info-title').innerText = data.name;
+            document.getElementById('info-type').innerText = type;
+            document.getElementById('info-desc').innerText = data.desc;
+            document.getElementById('stat-coords').innerText = `${data.coords[1].toFixed(2)}° N, ${data.coords[0].toFixed(2)}° E`;
+            document.getElementById('stat-role').innerText = data.role;
+            document.getElementById('stat-metric').innerText = data.traffic || data.metric || 'N/A';
+
+            // Canlı yerel saat hesabı (UTC offset)
+            if (data.tz !== undefined) {
+                const now = new Date();
+                const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+                const localDate = new Date(utc + (3600000 * data.tz));
+                document.getElementById('stat-time').innerText = localDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ` (UTC${data.tz >= 0 ? '+' : ''}${data.tz})`;
+            } else {
+                document.getElementById('stat-time').innerText = 'UTC Bilgisi Yok';
+            }
+
+            infoCard.style.display = 'block';
+        }
+
+        // =========================================================================
+        // 6. ARAMA VE FLY-TO (ODAKLANMA)
+        // =========================================================================
+        const searchInput = document.getElementById('search-input');
+        const searchResults = document.getElementById('search-results');
+        const searchClear = document.getElementById('search-clear');
+
+        const ALL_SEARCHABLE = [
+            ...CHOKEPOINTS.map(c => ({ ...c, category: "Boğaz / Kanal" })),
+            ...GLOBAL_HUBS.map(h => ({ ...h, category: "Finans Merkezi" }))
+        ];
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim().toLowerCase();
+            if (!query) {
+                searchResults.style.display = 'none';
+                searchClear.style.display = 'none';
+                return;
+            }
+
+            searchClear.style.display = 'block';
+            const matched = ALL_SEARCHABLE.filter(item => item.name.toLowerCase().includes(query));
+
+            if (matched.length === 0) {
+                searchResults.innerHTML = `<div style="padding: 8px; font-size: 0.8rem; color: var(--text-muted);">Eşleşen konum bulunamadı</div>`;
+            } else {
+                searchResults.innerHTML = matched.map(item => `
+                    <div class="search-item" data-id="${item.name}">
+                        <span><strong>${item.name}</strong></span>
+                        <span style="font-size: 0.7rem; color: var(--accent-cyan);">${item.category}</span>
+                    </div>
+                `).join('');
+
+                searchResults.querySelectorAll('.search-item').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const targetName = el.getAttribute('data-id');
+                        const targetObj = ALL_SEARCHABLE.find(i => i.name === targetName);
+                        if (targetObj) {
+                            flyTo(targetObj.coords);
+                            showDetailCard(targetObj, targetObj.category);
+                            searchResults.style.display = 'none';
+                            searchInput.value = targetObj.name;
                         }
                     });
-                };
-
-                // Add labels AFTER countries so they are on top
-                addLabels(oceans, "ocean-label");
-                addLabels(continents, "continent-label");
-
-                // Cities
-                const cityGroup = rotatedGroup.append("g");
-                cities.forEach(city => {
-                    const coords = projection(city.coords);
-                    if (coords) {
-                        // Main city dot
-                        cityGroup.append("circle")
-                            .attr("class", "city")
-                            .attr("cx", coords[0])
-                            .attr("cy", coords[1])
-                            .attr("r", 3)
-                            .on("mouseover", (event) => {
-                                if (!isTouchDevice()) {
-                                    tooltip.transition().duration(200).style("opacity", 1);
-                                    tooltip.html(`<strong>${city.name}</strong>`)
-                                        .style("left", (event.pageX + 15) + "px")
-                                        .style("top", (event.pageY - 15) + "px");
-                                }
-                            })
-                            .on("mousemove", (event) => {
-                                if (!isTouchDevice()) {
-                                    tooltip
-                                        .style("left", (event.pageX + 15) + "px")
-                                        .style("top", (event.pageY - 15) + "px");
-                                }
-                            })
-                            .on("mouseout", () => {
-                                if (!isTouchDevice()) {
-                                    tooltip.transition().duration(500).style("opacity", 0);
-                                }
-                            })
-                            .on("touchstart", (event) => {
-                                event.preventDefault();
-                                tooltip.transition().duration(200).style("opacity", 1);
-                                tooltip.html(`<strong>${city.name}</strong>`);
-                                
-                                const touch = event.touches[0];
-                                tooltip
-                                    .style("left", (touch.pageX + 15) + "px")
-                                    .style("top", (touch.pageY - 15) + "px");
-                            })
-                            .on("touchend", () => {
-                                tooltip.transition().duration(500).style("opacity", 0);
-                            });
-
-                        // City Label
-                        cityGroup.append("text")
-                            .attr("class", "city-label")
-                            .attr("x", coords[0])
-                            .attr("y", coords[1] - 8)
-                            .attr("text-anchor", "middle")
-                            .attr("transform", `rotate(90, ${coords[0]}, ${coords[1]})`)
-                            .text(city.name);
-                    }
                 });
-
-                // Compass (Static, Antique Style)
-                // East (D) is UP.
-                const compassGroup = svg.append("g")
-                    .attr("class", "compass-group")
-                    .attr("transform", `translate(${width - 80}, 80)`);
-
-                // Compass Rose Background
-                compassGroup.append("circle")
-                    .attr("r", 40)
-                    .attr("fill", "#fdfbf7")
-                    .attr("stroke", "#8b7355")
-                    .attr("stroke-width", 2);
-
-                // Decorative inner circle
-                compassGroup.append("circle")
-                    .attr("r", 35)
-                    .attr("fill", "none")
-                    .attr("stroke", "#8b7355")
-                    .attr("stroke-width", 1)
-                    .attr("stroke-dasharray", "2,2");
-
-                const directions = [
-                    { text: "D", x: 0, y: -22, color: "#8b0000" }, // East Top
-                    { text: "B", x: 0, y: 32, color: "#5d4037" },  // West Bottom
-                    { text: "K", x: -28, y: 5, color: "#5d4037" }, // North Left
-                    { text: "G", x: 28, y: 5, color: "#5d4037" }   // South Right
-                ];
-
-                directions.forEach(d => {
-                    compassGroup.append("text")
-                        .attr("x", d.x)
-                        .attr("y", d.y)
-                        .attr("text-anchor", "middle")
-                        .attr("fill", d.color)
-                        .text(d.text);
-                });
-
-                // Compass Arrow (Fleur-de-lis style simplified)
-                compassGroup.append("path")
-                    .attr("d", "M 0,-20 L -5,-5 L 0,0 L 5,-5 Z")
-                    .attr("fill", "#8b0000");
-
-                compassGroup.append("path")
-                    .attr("d", "M 0,20 L -5,5 L 0,0 L 5,5 Z")
-                    .attr("fill", "#8b7355");
-
-                compassGroup.append("path")
-                    .attr("d", "M -20,0 L -5,-5 L 0,0 L -5,5 Z")
-                    .attr("fill", "#8b7355");
-
-                compassGroup.append("path")
-                    .attr("d", "M 20,0 L 5,-5 L 0,0 L 5,5 Z")
-                    .attr("fill", "#8b7355");
-
-            })
-            .catch(err => console.error(err));
-
-        // Control Event Listeners
-        document.getElementById('zoom-in').addEventListener('click', () => {
-            svg.transition().duration(750).call(zoom.scaleBy, 1.5);
+            }
+            searchResults.style.display = 'block';
         });
 
-        document.getElementById('zoom-out').addEventListener('click', () => {
-            svg.transition().duration(750).call(zoom.scaleBy, 0.6);
+        searchClear.addEventListener('click', () => {
+            searchInput.value = '';
+            searchResults.style.display = 'none';
+            searchClear.style.display = 'none';
         });
 
-        document.getElementById('reset').addEventListener('click', () => {
-            svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
+        function flyTo(coords) {
+            const pt = projection(coords);
+            if (!pt) return;
+
+            // Hedef noktayı merkeze getirmek için transform hesabı
+            const scale = 3.5;
+            // Açı rotasyonunu hesaba kat
+            const rad = currentAngle * Math.PI / 180;
+            const cx = width / 2;
+            const cy = height / 2;
+            
+            // Merkezden fark
+            const dx = pt[0] - cx;
+            const dy = pt[1] - cy;
+            
+            // Döndürülmüş koordinat
+            const rotatedX = cx + (dx * Math.cos(rad) - dy * Math.sin(rad));
+            const rotatedY = cy + (dx * Math.sin(rad) + dy * Math.cos(rad));
+
+            const tx = width / 2 - scale * rotatedX;
+            const ty = height / 2 - scale * rotatedY;
+
+            svg.transition()
+                .duration(1200)
+                .ease(d3.easeCubicInOut)
+                .call(zoomBehavior.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+        }
+
+        // =========================================================================
+        // 7. KATMAN AÇ / KAPA (TOGGLES)
+        // =========================================================================
+        document.getElementById('layer-chokepoints').addEventListener('change', (e) => {
+            markersGroup.selectAll('.chokepoint-marker').style('display', e.target.checked ? null : 'none');
         });
 
-        // Add touch event listeners for better mobile support
-        document.getElementById('zoom-in').addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            this.style.transform = 'scale(0.95)';
-        }, { passive: false });
+        document.getElementById('layer-maritime').addEventListener('change', (e) => {
+            routesGroup.selectAll('.route-maritime').style('display', e.target.checked ? null : 'none');
+        });
 
-        document.getElementById('zoom-in').addEventListener('touchend', function(e) {
-            e.preventDefault();
-            this.style.transform = '';
-        }, { passive: false });
+        document.getElementById('layer-silk').addEventListener('change', (e) => {
+            routesGroup.selectAll('.route-silk').style('display', e.target.checked ? null : 'none');
+        });
 
-        document.getElementById('zoom-out').addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            this.style.transform = 'scale(0.95)';
-        }, { passive: false });
+        document.getElementById('layer-cities').addEventListener('change', (e) => {
+            markersGroup.selectAll('.city-marker').style('display', e.target.checked ? null : 'none');
+        });
 
-        document.getElementById('zoom-out').addEventListener('touchend', function(e) {
-            e.preventDefault();
-            this.style.transform = '';
-        }, { passive: false });
+        document.getElementById('layer-graticule').addEventListener('change', (e) => {
+            graticuleGroup.style('display', e.target.checked ? null : 'none');
+        });
 
-        document.getElementById('reset').addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            this.style.transform = 'scale(0.95)';
-        }, { passive: false });
+        // =========================================================================
+        // 8. TEMA DEĞİŞTİRİCİ (MODERN DARK / LIGHT / VINTAGE)
+        // =========================================================================
+        const themes = ["dark", "light", "vintage"];
+        let currentThemeIndex = 0;
+        const btnTheme = document.getElementById('btn-theme');
 
-        document.getElementById('reset').addEventListener('touchend', function(e) {
-            e.preventDefault();
-            this.style.transform = '';
-        }, { passive: false });
+        btnTheme.addEventListener('click', () => {
+            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+            const newTheme = themes[currentThemeIndex];
+            document.documentElement.setAttribute('data-theme', newTheme);
+            
+            const icons = {
+                dark: '<i class="fa-solid fa-moon"></i>',
+                light: '<i class="fa-solid fa-sun"></i>',
+                vintage: '<i class="fa-solid fa-scroll"></i>'
+            };
+            btnTheme.innerHTML = icons[newTheme];
+        });
 
+        // =========================================================================
+        // 9. ZOOM & SIFIRLAMA BUTONLARI
+        // =========================================================================
+        document.getElementById('btn-zoom-in').addEventListener('click', () => {
+            svg.transition().duration(400).call(zoomBehavior.scaleBy, 1.4);
+        });
+
+        document.getElementById('btn-zoom-out').addEventListener('click', () => {
+            svg.transition().duration(400).call(zoomBehavior.scaleBy, 0.7);
+        });
+
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            svg.transition().duration(800).call(zoomBehavior.transform, d3.zoomIdentity);
+            setOrientation(-90);
+            infoCard.style.display = 'none';
+        });
+
+        // Pencere Boyut Değişikliği
         window.addEventListener('resize', () => {
-            const newWidth = mapContainer.clientWidth;
-            const newHeight = mapContainer.clientHeight;
-            svg.attr("viewBox", [0, 0, newWidth, newHeight]);
-            projection.translate([newWidth / 2, newHeight / 2]);
+            width = mapContainer.clientWidth;
+            height = mapContainer.clientHeight;
+            svg.attr("viewBox", [0, 0, width, height]);
+            projection.translate([width / 2, height / 2]);
+            rotatableGroup.attr("transform", `rotate(${currentAngle}, ${width / 2}, ${height / 2})`);
         });
 
     </script>

@@ -6,7 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: dogu-haritasi
     app.kubernetes.io/instance: dogu-haritasi
-    app.kubernetes.io/version: "1.1.0"
+    app.kubernetes.io/version: "1.2.0"
     app.kubernetes.io/component: frontend
 spec:
   replicas: 1
@@ -23,7 +23,7 @@ spec:
       labels:
         app.kubernetes.io/name: dogu-haritasi
         app.kubernetes.io/instance: dogu-haritasi
-        app.kubernetes.io/version: "1.1.0"
+        app.kubernetes.io/version: "1.2.0"
     spec:
       securityContext:
         runAsNonRoot: true
@@ -34,7 +34,7 @@ spec:
         - name: gitea-reg-cred
       containers:
         - name: web
-          image: git.konstantiniyye.studio/admin/dogu:1.1.0
+          image: git.konstantiniyye.studio/admin/dogu:1.2.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
