@@ -1,0 +1,15 @@
+# Çalışma alanındaki harici repolar ve yedek kopyalar
+dogu/
+stats/
+
+# Editör ve IDE yapılandırmaları
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Geçici dosyalar ve loglar
+*.log
+/tmp/
+.temp/
