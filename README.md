@@ -2,15 +2,17 @@
 
 <div align="center">
 
-[![Live Demo](https://img.shields.io/badge/🌐%20Canlı%20Demo-harita.konstantiniyye.studio-00b4d8?style=for-the-badge&logo=googlechrome&logoColor=white)](https://harita.konstantiniyye.studio)
-[![Version](https://img.shields.io/badge/Sürüm-1.2.0-6366f1?style=for-the-badge&logo=semver&logoColor=white)](https://github.com/gitmuhammedalbayrak/dogu-haritasi)
+[![Live Demo EN](https://img.shields.io/badge/🇬🇧%20English%20Demo-Direct%20Link-3b82f6?style=for-the-badge&logo=googlechrome&logoColor=white)](https://harita.konstantiniyye.studio/?lang=en)
+[![Live Demo TR](https://img.shields.io/badge/🇹🇷%20Türkçe%20Demo-harita.konstantiniyye.studio-00b4d8?style=for-the-badge&logo=googlechrome&logoColor=white)](https://harita.konstantiniyye.studio)
+[![Version](https://img.shields.io/badge/Sürüm-1.2.1-6366f1?style=for-the-badge&logo=semver&logoColor=white)](https://github.com/gitmuhammedalbayrak/dogu-haritasi)
 [![Arch](https://img.shields.io/badge/Mimari-linux%2Farm64-f97316?style=for-the-badge&logo=arm&logoColor=white)](https://github.com/gitmuhammedalbayrak/dogu-haritasi)
 [![K8s](https://img.shields.io/badge/Orkestrasyon-K3s%20%7C%20Rancher-326ce5?style=for-the-badge&logo=kubernetes&logoColor=white)](https://github.com/gitmuhammedalbayrak/dogu-haritasi)
 [![Docker](https://img.shields.io/badge/Konteyner-Non--Root%20(10001)-22c55e?style=for-the-badge&logo=docker&logoColor=white)](https://github.com/gitmuhammedalbayrak/dogu-haritasi)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
-**Tarihsel Doğu-Yukarı (Orient) Perspektifini Modern Küresel Jeopolitik, Stratejik Boğazlar ve Finans Merkezleriyle Buluşturan Yeni Nesil Vektör Harita Platformu.**
+**Tarihsel Doğu-Yukarı (Orient) Perspektifini Modern Küresel Jeopolitik, Stratejik Boğazlar ve Finans Merkezleriyle Buluşturan Çok Dilli Vektör Harita Platformu.**
 
-[Canlı Haritayı İncele](https://harita.konstantiniyye.studio) • [Özellikler](#-yeni-nesil-özellikler) • [Mimari](#-sistem-mimarisi) • [Yerel Kurulum](#-yerel-kurulum-ve-çalıştırma)
+[🇬🇧 English Version Demo](https://harita.konstantiniyye.studio/?lang=en) • [🇹🇷 Türkçe Canlı Demo](https://harita.konstantiniyye.studio) • [Özellikler](#-yeni-nesil-özellikler-v121) • [English Overview](#-english-overview)
 
 </div>
 
@@ -27,36 +29,63 @@ Bu proje; Doğu yönelimli harita felsefesini nostaljik bir anı olmaktan çıka
 
 ---
 
-## ✨ Yeni Nesil Özellikler (v1.2.0)
+## ✨ Yeni Nesil Özellikler (v1.2.1)
 
-### 1. 🔄 Dinamik 4 Yönlü Rotasyon Motoru
-* **Doğu Yukarı (90°):** Antik ve Ortaçağ Doğu yönelimli dünya perspektifi.
+### 1. 🌐 Tam Çift Dil Desteği (TR / EN & Doğrudan Paylaşım Linki)
+* **Arayüzden Anında Dil Geçişi:** Başlık çubuğundaki `[ 🇹🇷 TR | 🇬🇧 EN ]` butonuyla sayfa yenilenmeden tüm harita etiketleri, detay panelleri ve pusula yönleri değişir.
+* **Doğrudan İngilizce Açılan URL:** Yabancı platformlarda (Reddit, Hacker News, Twitter) paylaşım için:  
+  👉 **`https://harita.konstantiniyye.studio/?lang=en`**  
+  parametresi ile harita doğrudan İngilizce olarak başlar.
+* **Yerelleştirilmiş Pusula:** Türkçe'de **D, B, K, G** (Doğu, Batı, Kuzey, Güney) / İngilizce'de **E, W, N, S** (East, West, North, South) harfleri dinamik olarak gösterilir.
+
+### 2. 🗺️ Kıta ve Okyanus Etiketleri (Geolabels)
+* **Kıtalar:** ASYA (ASIA), AFRİKA (AFRICA), AVRUPA (EUROPE), KUZEY AMERİKA (NORTH AMERICA), GÜNEY AMERİKA (SOUTH AMERICA), AVUSTRALYA (AUSTRALIA), ANTARKTİKA (ANTARCTICA).
+* **Okyanuslar:** PASİFİK OKYANUSU (PACIFIC OCEAN), ATLANTİK OKYANUSU (ATLANTIC OCEAN), HİNT OKYANUSU (INDIAN OCEAN), ARKTİK OKYANUSU (ARCTIC OCEAN).
+* **Zarif Tipografi:** `Cinzel Decorative` antik yazı tipiyle haritanın dokusuna uygun yarı saydam ve estetik yerleşim. Sol alt filtreden açılıp kapatılabilir.
+
+### 3. 🔄 Dinamik 4 Yönlü Rotasyon Motoru
+* **Doğu Yukarı (90° - Varsayılan):** Antik ve Ortaçağ Doğu yönelimli dünya perspektifi.
 * **Kuzey Yukarı (0°):** Modern küresel standart yönelim.
-* **Güney Yukarı (180°):** Güney yarımküre ve İslam kartografisi perspektifi.
+* **Güney Yukarı (180°):** Güney yarımküre ve İslam kartografisi (El-İdrisî) perspektifi.
 * **Batı Yukarı (270°):** Ters okyanus havzası perspektifi.
 * **Canlı Pusula:** Harita açısına göre gerçek zamanlı dönen dinamik pusula kadranı.
 * **Akıllı Metin Telafisi:** Harita hangi açıda olursa olsun şehir ve boğaz isimleri ters dönmez, daima kullanıcıya doğru dik kalır.
 
-### 2. 🚢 Küresel Deniz Koridorları ve Stratejik Boğazlar (Chokepoints)
+### 4. 🚢 Küresel Deniz Koridorları ve Stratejik Boğazlar (Chokepoints)
 * **Darboğazlar ve Kanallar:** Süveyş Kanalı, Malakka Boğazı, Hürmüz Boğazı, Babülmendep, Panama Kanalı, Türk Boğazları (İstanbul & Çanakkale) ve Cebelitarık.
 * **Animasyonlu Rotalar:** Asya-Avrupa, Trans-Pasifik, Trans-Atlantik ve Orta Doğu petrol koridorları üzerinde parıldayan kesik çizgi akışları.
 * **Tarihi vs Modern Kıyas:** Tarihi İpek Yolu kara kervan ağı ile modern deniz yolları aynı anda karşılaştırılabilir.
 
-### 3. 🏙️ Küresel Finans Hub'ları & Canlı Saatler
-* İstanbul, Londra, New York, Tokyo, Şanghay, Singapur, Dubai, Frankfurt, Pekin gibi stratejik merkezler.
+### 5. 🏙️ Küresel Finans Hub'ları & Canlı Saatler
+* İstanbul, Londra, New York, Tokyo, Şanghay, Singapur, Dubai, Frankfurt, Pekin.
 * Tıklandığında açılan detay kartında:
   * Koordinatlar ve jeopolitik stratejik rol.
   * Canlı yerel saat hesabı (UTC ofsetiyle otomatik hesaplanır).
   * Nüfus ve ticaret hacmi verileri.
 
-### 4. 🔍 Akıllı Arama ve Odaklanma (Fly-To)
+### 6. 🔍 Akıllı Arama ve Odaklanma (Fly-To)
 * Şehir veya boğaz adı yazıldığında otomatik tamamlama önerileri.
 * Seçilen konuma yumuşak eğrili (cubic-bezier) animasyonla otomatik uçuş ve zoom.
 
-### 5. 🎨 3 Farklı Arayüz Teması
+### 7. 🎨 3 Farklı Arayüz Teması
 * **Modern Karanlık (Cyber Slate):** Koyu okyanus zemininde neon mavi, amber ve zümrüt rotalar.
 * **Minimalist Açık (Clean Vector):** Ferah, modern beyaz/gri harita dokusu.
 * **Tarihi Parşömen (Vintage Parchment):** Antika el yazması atlas hissi veren doku ve renkler.
+
+---
+
+## 🌍 English Overview
+
+An open-source, interactive vector world map that reimagines modern global geopolitics and maritime trade routes through historical cartographic perspectives:
+
+* **East-Oriented Perspective:** Re-centering the globe with the **East (Orient) at the top**, inspired by medieval European T-O maps (where the word *"orientation"* originated).
+* **Multi-Perspective Engine:** Smoothly rotate between East-Up (90°), North-Up (0°), South-Up (180° / Al-Idrisi style), and West-Up (270°).
+* **Critical Chokepoints:** Live strategic information on the Suez Canal, Strait of Malacca, Strait of Hormuz, Bab-el-Mandeb, Panama Canal, Turkish Straits, and Gibraltar.
+* **Global Shipping & Silk Road:** Comparing modern glowing container corridors with the ancient overland Silk Road.
+* **Global Megacity Hubs:** Real-time local time calculation, financial status, coordinates, and population metrics.
+* **Bilingual Support:** Full English and Turkish support with instant language switching and dedicated URL parameters (`?lang=en`).
+
+🔗 **Direct English Live Link:** [https://harita.konstantiniyye.studio/?lang=en](https://harita.konstantiniyye.studio/?lang=en)
 
 ---
 
@@ -65,7 +94,8 @@ Bu proje; Doğu yönelimli harita felsefesini nostaljik bir anı olmaktan çıka
 | Katman | Teknoloji / Standart | Açıklama |
 | :--- | :--- | :--- |
 | **Görselleştirme** | D3.js v7 + TopoJSON | Yüksek performanslı SVG vektör projeksiyonu |
-| **Ön Yüz Mimarisi** | Vanilla JS + Glassmorphism UI | Bağımlılıksız, ultra hafif (<50 KB) tek sayfa arayüzü |
+| **Ön Yüz Mimarisi** | Vanilla JS + Glassmorphism UI | Bağımlılıksız, ultra hafif (<65 KB) tek sayfa arayüzü |
+| **Çok Dilli Altyapı** | İki Dilli Sözlük Motoru (TR/EN) | URL senkronizasyonu (`?lang=en`) ve dinamik DOM çevirisi |
 | **Web Sunucusu** | Nginx Alpine (Rootless) | Port 8080, Gzip sıkıştırma, `/healthz` probe endpointi |
 | **Konteyner Güvenliği** | Multi-Stage Dockerfile | `USER 10001`, `readOnlyRootFilesystem: true`, `drop: [ALL]` |
 | **Altyapı** | Oracle Cloud (OCI) ARM64 (`aarch64`) | K3s / Rancher Kubernetes Kümesi, Rocky Linux Host |
@@ -82,13 +112,14 @@ git clone https://github.com/gitmuhammedalbayrak/dogu-haritasi.git
 cd dogu-haritasi
 
 # 2. Çok aşamalı Docker imajını derleyin
-docker build -t dogu-haritasi:1.2.0 .
+docker build -t dogu-haritasi:1.2.1 .
 
 # 3. Non-root konteyneri başlatın
-docker run -d --name dogu-web -p 8080:8080 dogu-haritasi:1.2.0
+docker run -d --name dogu-web -p 8080:8080 dogu-haritasi:1.2.1
 
 # 4. Tarayıcınızda açın
-# http://localhost:8080
+# Türkçe: http://localhost:8080
+# İngilizce: http://localhost:8080/?lang=en
 ```
 
 ---
