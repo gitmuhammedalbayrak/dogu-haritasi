@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  APP_VERSION: "1.2.0"
+  APP_VERSION: "1.2.1"
   REGISTRY: "git.konstantiniyye.studio"
   IMAGE_NAME: "git.konstantiniyye.studio/admin/dogu"
 

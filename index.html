@@ -4,16 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Doğu Yönelimli İnteraktif Dünya Haritası | Modern Küresel Perspektif</title>
+    <title>East-Oriented World Map | Doğu Yönelimli Dünya Haritası</title>
     
     <!-- D3.js ve TopoJSON -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
     
-    <!-- Modern Google Fonts & FontAwesome Icons -->
+    <!-- Google Fonts & FontAwesome Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <style>
@@ -29,13 +29,15 @@
             --accent-amber: #f59e0b;
             --accent-emerald: #10b981;
             --accent-rose: #f43f5e;
-            --card-bg: rgba(15, 23, 42, 0.85);
-            --card-border: rgba(56, 189, 248, 0.2);
+            --card-bg: rgba(15, 23, 42, 0.88);
+            --card-border: rgba(56, 189, 248, 0.22);
             --compass-bg: rgba(15, 23, 42, 0.9);
             --compass-border: #38bdf8;
             --route-maritime: #38bdf8;
             --route-silk: #f59e0b;
-            --glow: 0 0 15px rgba(56, 189, 248, 0.4);
+            --glow: 0 0 15px rgba(56, 189, 248, 0.35);
+            --continent-color: rgba(248, 250, 252, 0.28);
+            --ocean-color: rgba(56, 189, 248, 0.22);
         }
 
         :root[data-theme="light"] {
@@ -50,13 +52,15 @@
             --accent-amber: #d97706;
             --accent-emerald: #059669;
             --accent-rose: #e11d48;
-            --card-bg: rgba(255, 255, 255, 0.9);
+            --card-bg: rgba(255, 255, 255, 0.92);
             --card-border: rgba(203, 213, 225, 0.8);
             --compass-bg: rgba(255, 255, 255, 0.95);
             --compass-border: #0284c7;
             --route-maritime: #0284c7;
             --route-silk: #d97706;
             --glow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --continent-color: rgba(15, 23, 42, 0.25);
+            --ocean-color: rgba(2, 132, 199, 0.22);
         }
 
         :root[data-theme="vintage"] {
@@ -71,13 +75,15 @@
             --accent-amber: #8b0000;
             --accent-emerald: #2d6a4f;
             --accent-rose: #8b0000;
-            --card-bg: rgba(240, 230, 210, 0.92);
+            --card-bg: rgba(240, 230, 210, 0.94);
             --card-border: rgba(139, 115, 85, 0.4);
             --compass-bg: #fdfbf7;
             --compass-border: #8b7355;
             --route-maritime: #1d4e89;
             --route-silk: #8b0000;
             --glow: 0 4px 15px rgba(93, 64, 55, 0.15);
+            --continent-color: rgba(93, 64, 55, 0.35);
+            --ocean-color: rgba(29, 78, 137, 0.25);
         }
 
         * {
@@ -137,6 +143,30 @@
             pointer-events: none;
         }
 
+        /* Continents & Oceans */
+        .continent-label {
+            font-family: 'Cinzel Decorative', 'Plus Jakarta Sans', serif;
+            font-size: 14px;
+            font-weight: 900;
+            fill: var(--continent-color);
+            letter-spacing: 4px;
+            text-anchor: middle;
+            pointer-events: none;
+            text-transform: uppercase;
+        }
+
+        .ocean-label {
+            font-family: 'Cinzel Decorative', 'Plus Jakarta Sans', serif;
+            font-size: 13px;
+            font-weight: 700;
+            font-style: italic;
+            fill: var(--ocean-color);
+            letter-spacing: 5px;
+            text-anchor: middle;
+            pointer-events: none;
+            text-transform: uppercase;
+        }
+
         /* Trade Routes */
         .route-maritime {
             fill: none;
@@ -156,9 +186,7 @@
         }
 
         @keyframes dashPulse {
-            to {
-                stroke-dashoffset: -200;
-            }
+            to { stroke-dashoffset: -200; }
         }
 
         /* Markers */
@@ -226,10 +254,10 @@
         }
 
         .header-content {
-            padding: 10px 18px;
+            padding: 8px 16px;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
         }
 
         .brand-badge {
@@ -247,7 +275,7 @@
 
         .brand-text h1 {
             margin: 0;
-            font-size: 1.05rem;
+            font-size: 1.02rem;
             font-weight: 800;
             letter-spacing: -0.3px;
             display: flex;
@@ -260,6 +288,34 @@
             font-size: 0.72rem;
             color: var(--text-muted);
             font-weight: 500;
+        }
+
+        /* Language Toggle in Header */
+        .lang-switch {
+            display: flex;
+            background: rgba(56, 189, 248, 0.1);
+            border-radius: 8px;
+            padding: 2px;
+            margin-left: 8px;
+            border: 1px solid var(--card-border);
+        }
+
+        .lang-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 3px 7px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .lang-btn.active {
+            background: var(--accent-cyan);
+            color: #ffffff;
+            box-shadow: 0 1px 4px rgba(56, 189, 248, 0.4);
         }
 
         /* Search Bar */
@@ -572,7 +628,7 @@
                 padding: 6px 12px;
             }
             .brand-text h1 {
-                font-size: 0.85rem;
+                font-size: 0.82rem;
             }
             .orientation-pills .pill-btn {
                 padding: 5px 8px;
@@ -619,7 +675,7 @@
     <!-- Yükleniyor Ekranı -->
     <div class="loader-overlay" id="loader">
         <div class="spinner"></div>
-        <div style="margin-top: 14px; font-weight: 700; font-size: 0.9rem; letter-spacing: 0.5px;">Küresel Ağ Yükleniyor...</div>
+        <div id="loader-text" style="margin-top: 14px; font-weight: 700; font-size: 0.9rem; letter-spacing: 0.5px;">Küresel Ağ Yükleniyor...</div>
     </div>
 
     <!-- Üst Başlık -->
@@ -629,8 +685,13 @@
                 <i class="fa-solid fa-compass-drafting"></i>
             </div>
             <div class="brand-text">
-                <h1>Doğu Yönelimli Dünya Haritası <span style="font-size: 0.7rem; padding: 2px 6px; border-radius: 6px; background: rgba(56, 189, 248, 0.2); color: var(--accent-cyan);">V1.2</span></h1>
-                <p class="sub">Doğu-Yukarı & Küresel Ticaret Koridorları</p>
+                <h1 id="ui-title">Doğu Yönelimli Dünya Haritası <span style="font-size: 0.7rem; padding: 2px 6px; border-radius: 6px; background: rgba(56, 189, 248, 0.2); color: var(--accent-cyan);">V1.2</span></h1>
+                <p class="sub" id="ui-sub">Doğu-Yukarı & Küresel Ticaret Koridorları</p>
+            </div>
+            <!-- Dil Değiştirici -->
+            <div class="lang-switch">
+                <button class="lang-btn active" id="lang-tr" onclick="switchLanguage('tr')">TR</button>
+                <button class="lang-btn" id="lang-en" onclick="switchLanguage('en')">EN</button>
             </div>
         </div>
     </header>
@@ -648,18 +709,18 @@
     <!-- Yönelim ve Pusula Paneli -->
     <div class="orientation-dock">
         <div class="glass-panel orientation-pills">
-            <button class="pill-btn active" data-angle="-90" title="Doğu Yukarı (Antik Orient)">Doğu (90°)</button>
-            <button class="pill-btn" data-angle="0" title="Kuzey Yukarı (Modern Standart)">Kuzey (0°)</button>
-            <button class="pill-btn" data-angle="180" title="Güney Yukarı (İslam Haritacılığı)">Güney (180°)</button>
-            <button class="pill-btn" data-angle="90" title="Batı Yukarı">Batı (270°)</button>
+            <button class="pill-btn active" data-angle="-90" id="btn-orient-east">Doğu (90°)</button>
+            <button class="pill-btn" data-angle="0" id="btn-orient-north">Kuzey (0°)</button>
+            <button class="pill-btn" data-angle="180" id="btn-orient-south">Güney (180°)</button>
+            <button class="pill-btn" data-angle="90" id="btn-orient-west">Batı (270°)</button>
         </div>
 
-        <div class="glass-panel compass-card" id="compass-card" title="Tıkla: Yönü Sıfırla / Döndür">
+        <div class="glass-panel compass-card" id="compass-card" title="Tıkla: Yönü Döndür / Click to Rotate">
             <div class="compass-dial" id="compass-dial">
-                <span class="compass-letter letter-e">D</span>
-                <span class="compass-letter letter-w">B</span>
-                <span class="compass-letter letter-n">K</span>
-                <span class="compass-letter letter-s">G</span>
+                <span class="compass-letter letter-e" id="compass-letter-e">D</span>
+                <span class="compass-letter letter-w" id="compass-letter-w">B</span>
+                <span class="compass-letter letter-n" id="compass-letter-n">K</span>
+                <span class="compass-letter letter-s" id="compass-letter-s">G</span>
                 <div class="compass-needle">
                     <div class="needle-north"></div>
                     <div class="needle-south"></div>
@@ -675,26 +736,30 @@
 
     <!-- Katman Kontrolleri -->
     <div class="glass-panel layers-drawer">
-        <div class="layer-title">Katman Filtreleri</div>
+        <div class="layer-title" id="ui-layer-title">Katman Filtreleri</div>
         <label class="layer-item">
             <input type="checkbox" id="layer-chokepoints" checked>
-            <span>Stratejik Boğazlar & Kanallar</span>
+            <span id="ui-layer-chokepoints">Stratejik Boğazlar & Kanallar</span>
         </label>
         <label class="layer-item">
             <input type="checkbox" id="layer-maritime" checked>
-            <span>Modern Deniz Koridorları</span>
+            <span id="ui-layer-maritime">Modern Deniz Koridorları</span>
         </label>
         <label class="layer-item">
             <input type="checkbox" id="layer-silk" checked>
-            <span>Tarihi İpek Yolu Ağı</span>
+            <span id="ui-layer-silk">Tarihi İpek Yolu Ağı</span>
         </label>
         <label class="layer-item">
             <input type="checkbox" id="layer-cities" checked>
-            <span>Küresel Finans & Mega Şehirler</span>
+            <span id="ui-layer-cities">Küresel Finans & Mega Şehirler</span>
+        </label>
+        <label class="layer-item">
+            <input type="checkbox" id="layer-geolabels" checked>
+            <span id="ui-layer-geolabels">Kıta ve Okyanus İsimleri</span>
         </label>
         <label class="layer-item">
             <input type="checkbox" id="layer-graticule" checked>
-            <span>Enlem / Boylam Ağı</span>
+            <span id="ui-layer-graticule">Enlem / Boylam Ağı</span>
         </label>
     </div>
 
@@ -703,13 +768,13 @@
         <button class="action-btn" id="btn-theme" title="Temayı Değiştir (Karanlık / Açık / Parşömen)">
             <i class="fa-solid fa-moon"></i>
         </button>
-        <button class="action-btn" id="btn-zoom-in" title="Yakınlaştır">
+        <button class="action-btn" id="btn-zoom-in" title="Yakınlaştır / Zoom in">
             <i class="fa-solid fa-plus"></i>
         </button>
-        <button class="action-btn" id="btn-zoom-out" title="Uzaklaştır">
+        <button class="action-btn" id="btn-zoom-out" title="Uzaklaştır / Zoom out">
             <i class="fa-solid fa-minus"></i>
         </button>
-        <button class="action-btn" id="btn-reset" title="Görünümü Sıfırla">
+        <button class="action-btn" id="btn-reset" title="Görünümü Sıfırla / Reset view">
             <i class="fa-solid fa-arrows-rotate"></i>
         </button>
     </div>
@@ -728,19 +793,19 @@
         <p class="info-desc" id="info-desc">-</p>
         <div class="info-stats">
             <div class="stat-item">
-                <span class="stat-label">Koordinatlar</span>
+                <span class="stat-label" id="lbl-coords">Koordinatlar</span>
                 <span class="stat-value" id="stat-coords">-</span>
             </div>
             <div class="stat-item">
-                <span class="stat-label">Stratejik Rol</span>
+                <span class="stat-label" id="lbl-role">Stratejik Rol</span>
                 <span class="stat-value" id="stat-role">-</span>
             </div>
             <div class="stat-item" style="margin-top: 6px;">
-                <span class="stat-label">Canlı Yerel Saat</span>
+                <span class="stat-label" id="lbl-time">Canlı Yerel Saat</span>
                 <span class="stat-value" id="stat-time">-</span>
             </div>
             <div class="stat-item" style="margin-top: 6px;">
-                <span class="stat-label">Trafik / Nüfus</span>
+                <span class="stat-label" id="lbl-metric">Trafik / Nüfus</span>
                 <span class="stat-value" id="stat-metric">-</span>
             </div>
         </div>
@@ -748,84 +813,316 @@
 
     <script>
         // =========================================================================
-        // 1. VERİ TANIMLAMALARI (Stratejik Boğazlar, Şehirler, Rotalar)
+        // 1. DİL VE ÇEVİRİ MOTORU (TR / EN & URL ENTEGRASYONU)
         // =========================================================================
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentLang = urlParams.get('lang') === 'en' || window.location.pathname.startsWith('/en') ? 'en' : 'tr';
+
+        const I18N = {
+            tr: {
+                title: 'Doğu Yönelimli Dünya Haritası',
+                sub: 'Doğu-Yukarı & Küresel Ticaret Koridorları',
+                searchPlaceholder: 'Şehir, boğaz veya koridor ara...',
+                orientEast: 'Doğu (90°)',
+                orientNorth: 'Kuzey (0°)',
+                orientSouth: 'Güney (180°)',
+                orientWest: 'Batı (270°)',
+                compassE: 'D', compassW: 'B', compassN: 'K', compassS: 'G',
+                layerTitle: 'Katman Filtreleri',
+                layerChokepoints: 'Stratejik Boğazlar & Kanallar',
+                layerMaritime: 'Modern Deniz Koridorları',
+                layerSilk: 'Tarihi İpek Yolu Ağı',
+                layerCities: 'Küresel Finans & Mega Şehirler',
+                layerGeolabels: 'Kıta ve Okyanus İsimleri',
+                layerGraticule: 'Enlem / Boylam Ağı',
+                lblCoords: 'Koordinatlar',
+                lblRole: 'Stratejik Rol',
+                lblTime: 'Canlı Yerel Saat',
+                lblMetric: 'Trafik / Nüfus',
+                loaderText: 'Küresel Ağ Yükleniyor...',
+                noMatch: 'Eşleşen konum bulunamadı'
+            },
+            en: {
+                title: 'East-Oriented World Map',
+                sub: 'East-Up & Global Trade Corridors',
+                searchPlaceholder: 'Search city, chokepoint or corridor...',
+                orientEast: 'East (90°)',
+                orientNorth: 'North (0°)',
+                orientSouth: 'South (180°)',
+                orientWest: 'West (270°)',
+                compassE: 'E', compassW: 'W', compassN: 'N', compassS: 'S',
+                layerTitle: 'Layer Filters',
+                layerChokepoints: 'Strategic Chokepoints & Canals',
+                layerMaritime: 'Modern Maritime Corridors',
+                layerSilk: 'Historic Silk Road Network',
+                layerCities: 'Global Financial Hubs & Megacities',
+                layerGeolabels: 'Continents & Oceans',
+                layerGraticule: 'Latitude / Longitude Grid',
+                lblCoords: 'Coordinates',
+                lblRole: 'Strategic Role',
+                lblTime: 'Live Local Time',
+                lblMetric: 'Traffic / Population',
+                loaderText: 'Loading Global Network...',
+                noMatch: 'No matching location found'
+            }
+        };
+
+        function switchLanguage(lang) {
+            currentLang = lang;
+            const t = I18N[lang];
+
+            // UI Metinleri Güncelleme
+            document.getElementById('ui-title').innerHTML = `${t.title} <span style="font-size: 0.7rem; padding: 2px 6px; border-radius: 6px; background: rgba(56, 189, 248, 0.2); color: var(--accent-cyan);">V1.2</span>`;
+            document.getElementById('ui-sub').innerText = t.sub;
+            document.getElementById('search-input').placeholder = t.searchPlaceholder;
+            document.getElementById('btn-orient-east').innerText = t.orientEast;
+            document.getElementById('btn-orient-north').innerText = t.orientNorth;
+            document.getElementById('btn-orient-south').innerText = t.orientSouth;
+            document.getElementById('btn-orient-west').innerText = t.orientWest;
+            document.getElementById('compass-letter-e').innerText = t.compassE;
+            document.getElementById('compass-letter-w').innerText = t.compassW;
+            document.getElementById('compass-letter-n').innerText = t.compassN;
+            document.getElementById('compass-letter-s').innerText = t.compassS;
+            document.getElementById('ui-layer-title').innerText = t.layerTitle;
+            document.getElementById('ui-layer-chokepoints').innerText = t.layerChokepoints;
+            document.getElementById('ui-layer-maritime').innerText = t.layerMaritime;
+            document.getElementById('ui-layer-silk').innerText = t.layerSilk;
+            document.getElementById('ui-layer-cities').innerText = t.layerCities;
+            document.getElementById('ui-layer-geolabels').innerText = t.layerGeolabels;
+            document.getElementById('ui-layer-graticule').innerText = t.layerGraticule;
+            document.getElementById('lbl-coords').innerText = t.lblCoords;
+            document.getElementById('lbl-role').innerText = t.lblRole;
+            document.getElementById('lbl-time').innerText = t.lblTime;
+            document.getElementById('lbl-metric').innerText = t.lblMetric;
+
+            // Buton aktiflik durumu
+            document.getElementById('lang-tr').classList.toggle('active', lang === 'tr');
+            document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+
+            // URL senkronizasyonu
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.set('lang', lang);
+            window.history.replaceState({}, '', newUrl);
+
+            // Harita üzerindeki etiketleri dinamik güncelle
+            updateMapLabels();
+        }
+
+        // =========================================================================
+        // 2. VERİ TANIMLAMALARI (Çok Dilli Kıta, Okyanus, Boğaz, Şehir ve Rotalar)
+        // =========================================================================
+        const CONTINENTS = [
+            { name_tr: "ASYA", name_en: "ASIA", coords: [95, 45] },
+            { name_tr: "AFRİKA", name_en: "AFRICA", coords: [22, 6] },
+            { name_tr: "AVRUPA", name_en: "EUROPE", coords: [25, 52] },
+            { name_tr: "KUZEY AMERİKA", name_en: "NORTH AMERICA", coords: [-100, 48] },
+            { name_tr: "GÜNEY AMERİKA", name_en: "SOUTH AMERICA", coords: [-60, -16] },
+            { name_tr: "AVUSTRALYA", name_en: "AUSTRALIA", coords: [134, -25] },
+            { name_tr: "ANTARKTİKA", name_en: "ANTARCTICA", coords: [25, -80] }
+        ];
+
+        const OCEANS = [
+            { name_tr: "PASİFİK OKYANUSU", name_en: "PACIFIC OCEAN", coords: [175, 0] },
+            { name_tr: "PASİFİK OKYANUSU", name_en: "PACIFIC OCEAN", coords: [-150, 0] },
+            { name_tr: "ATLANTİK OKYANUSU", name_en: "ATLANTIC OCEAN", coords: [-35, 20] },
+            { name_tr: "HİNT OKYANUSU", name_en: "INDIAN OCEAN", coords: [80, -15] },
+            { name_tr: "ARKTİK OKYANUSU", name_en: "ARCTIC OCEAN", coords: [0, 82] }
+        ];
+
         const CHOKEPOINTS = [
-            { id: "suez", name: "Süveyş Kanalı", coords: [32.34, 30.60], type: "Deniz Kanalı", desc: "Küresel deniz ticaretinin %12'sinin ve konteyner hacminin %30'unun geçtiği, Asya ile Avrupa arasındaki en kritik suyolu.", role: "Küresel Konteyner Ana Damarı", traffic: "~50 Gemi / Gün", tz: 2 },
-            { id: "malacca", name: "Malakka Boğazı", coords: [101.35, 2.50], type: "Stratejik Boğaz", desc: "Doğu Asya ve Çin ekonomisini Orta Doğu petrolüne ve Avrupa pazarlarına bağlayan dünyanın en yoğun boğazı.", role: "Enerji & Ticaret Boğazı", traffic: "~90.000 Gemi / Yıl", tz: 8 },
-            { id: "hormuz", name: "Hürmüz Boğazı", coords: [56.40, 26.56], type: "Enerji Koridoru", desc: "Dünya petrol tüketiminin beşte birinin (~21 milyon varil/gün) geçtiği en kritik jeopolitik enerji darboğazı.", role: "Global Petrol Kilidi", traffic: "~21M Varil / Gün", tz: 4 },
-            { id: "mandeb", name: "Babülmendep Boğazı", coords: [43.33, 12.58], type: "Stratejik Boğaz", desc: "Kızıldeniz'in Aden Körfezi çıkış kapısı. Süveyş Kanalı rotasının ayrılmaz ve hassas güvenlik noktası.", role: "Kızıldeniz Girişi", traffic: "Kritik Yük Hattı", tz: 3 },
-            { id: "panama", name: "Panama Kanalı", coords: [-79.91, 9.10], type: "Kanal", desc: "Atlantik ile Pasifik Okyanusunu bağlayarak gemilerin Güney Amerika'yı dolaşmasını engelleyen mühendislik harikası.", role: "Trans-Okyanus Geçişi", traffic: "~14.000 Gemi / Yıl", tz: -5 },
-            { id: "straits", name: "İstanbul & Çanakkale Boğazları", coords: [29.04, 41.12], type: "Doğal Boğazlar", desc: "Karadeniz havzasını Akdeniz ve dünya ticaretine bağlayan; tahıl, petrol ve emtia naklinin kalbi.", role: "Karadeniz Anahtarı", traffic: "~40.000 Gemi / Yıl", tz: 3 },
-            { id: "gibraltar", name: "Cebelitarık Boğazı", coords: [-5.60, 35.98], type: "Doğal Boğaz", desc: "Akdeniz'i Atlantik Okyanusu'na bağlayan, antik çağlardan beri kontrolü elinde tutan güçlere stratejik üstünlük sağlayan boğaz.", role: "Akdeniz Atlantik Kapısı", traffic: "~100.000 Gemi / Yıl", tz: 1 }
+            { 
+                id: "suez", 
+                name_tr: "Süveyş Kanalı", name_en: "Suez Canal", 
+                coords: [32.34, 30.60], 
+                type_tr: "Deniz Kanalı", type_en: "Maritime Canal",
+                desc_tr: "Küresel deniz ticaretinin %12'sinin ve konteyner hacminin %30'unun geçtiği, Asya ile Avrupa arasındaki en kritik suyolu.",
+                desc_en: "Carries 12% of global trade and 30% of global container traffic, connecting Asia and Europe directly.",
+                role_tr: "Küresel Konteyner Ana Damarı", role_en: "Global Container Artery",
+                traffic_tr: "~50 Gemi / Gün", traffic_en: "~50 Ships / Day", tz: 2 
+            },
+            { 
+                id: "malacca", 
+                name_tr: "Malakka Boğazı", name_en: "Strait of Malacca", 
+                coords: [101.35, 2.50], 
+                type_tr: "Stratejik Boğaz", type_en: "Strategic Strait",
+                desc_tr: "Doğu Asya ve Çin ekonomisini Orta Doğu petrolüne ve Avrupa pazarlarına bağlayan dünyanın en yoğun boğazı.",
+                desc_en: "The world's busiest maritime bottleneck, connecting East Asia to Middle Eastern energy and Western markets.",
+                role_tr: "Enerji & Ticaret Boğazı", role_en: "Global Energy & Trade Arterial",
+                traffic_tr: "~90.000 Gemi / Yıl", traffic_en: "~90,000 Ships / Year", tz: 8 
+            },
+            { 
+                id: "hormuz", 
+                name_tr: "Hürmüz Boğazı", name_en: "Strait of Hormuz", 
+                coords: [56.40, 26.56], 
+                type_tr: "Enerji Koridoru", type_en: "Energy Chokepoint",
+                desc_tr: "Dünya petrol tüketiminin beşte birinin (~21 milyon varil/gün) geçtiği en kritik jeopolitik enerji darboğazı.",
+                desc_en: "The world's most critical petroleum transit chokepoint, handling ~21 million barrels of oil per day (20% of global consumption).",
+                role_tr: "Global Petrol Kilidi", role_en: "Global Petroleum Keystone",
+                traffic_tr: "~21M Varil / Gün", traffic_en: "~21M Barrels / Day", tz: 4 
+            },
+            { 
+                id: "mandeb", 
+                name_tr: "Babülmendep Boğazı", name_en: "Bab-el-Mandeb Strait", 
+                coords: [43.33, 12.58], 
+                type_tr: "Stratejik Boğaz", type_en: "Strategic Strait",
+                desc_tr: "Kızıldeniz'in Aden Körfezi çıkış kapısı. Süveyş Kanalı rotasının ayrılmaz ve hassas güvenlik noktası.",
+                desc_en: "Southern gateway to the Red Sea, essential for all maritime traffic transiting the Suez Canal.",
+                role_tr: "Kızıldeniz Girişi", role_en: "Red Sea Gateway",
+                traffic_tr: "Kritik Yük Hattı", traffic_en: "Critical Freight Route", tz: 3 
+            },
+            { 
+                id: "panama", 
+                name_tr: "Panama Kanalı", name_en: "Panama Canal", 
+                coords: [-79.91, 9.10], 
+                type_tr: "Kanal", type_en: "Canal",
+                desc_tr: "Atlantik ile Pasifik Okyanusunu bağlayarak gemilerin Güney Amerika'yı dolaşmasını engelleyen mühendislik harikası.",
+                desc_en: "Key conduit connecting Atlantic and Pacific Oceans, avoiding the long voyage around Cape Horn.",
+                role_tr: "Trans-Okyanus Geçişi", role_en: "Trans-Oceanic Gateway",
+                traffic_tr: "~14.000 Gemi / Yıl", traffic_en: "~14,000 Ships / Year", tz: -5 
+            },
+            { 
+                id: "straits", 
+                name_tr: "İstanbul & Çanakkale Boğazları", name_en: "Turkish Straits (Bosphorus)", 
+                coords: [29.04, 41.12], 
+                type_tr: "Doğal Boğazlar", type_en: "Natural Straits",
+                desc_tr: "Karadeniz havzasını Akdeniz ve dünya ticaretine bağlayan; tahıl, petrol ve emtia naklinin kalbi.",
+                desc_en: "The vital link connecting the Black Sea to the Mediterranean, crucial for global grain and energy transit.",
+                role_tr: "Karadeniz Anahtarı", role_en: "Black Sea Keystone",
+                traffic_tr: "~40.000 Gemi / Yıl", traffic_en: "~40,000 Ships / Year", tz: 3 
+            },
+            { 
+                id: "gibraltar", 
+                name_tr: "Cebelitarık Boğazı", name_en: "Strait of Gibraltar", 
+                coords: [-5.60, 35.98], 
+                type_tr: "Doğal Boğaz", type_en: "Natural Strait",
+                desc_tr: "Akdeniz'i Atlantik Okyanusu'na bağlayan, antik çağlardan beri kontrolü elinde tutan güçlere stratejik üstünlük sağlayan boğaz.",
+                desc_en: "The sole natural passage connecting the Mediterranean Sea to the Atlantic Ocean.",
+                role_tr: "Akdeniz Atlantik Kapısı", role_en: "Atlantic-Mediterranean Gate",
+                traffic_tr: "~100.000 Gemi / Yıl", traffic_en: "~100,000 Ships / Year", tz: 1 
+            }
         ];
 
         const GLOBAL_HUBS = [
-            { name: "İstanbul", coords: [28.98, 41.01], role: "Avrasya Finans & Lojistik", metric: "15.9M Nüfus", tz: 3, desc: "İki kıtayı birleştiren, tarihi İpek Yolu'nun bitişi ve modern hava/deniz koridorlarının merkez üssü." },
-            { name: "Tokyo", coords: [139.69, 35.69], role: "Mega Finans & Teknoloji", metric: "37.4M Nüfus", tz: 9, desc: "Dünyanın en büyük metropol ekonomisi, Asya-Pasifik ticaretinin en köklü başkenti." },
-            { name: "Şanghay", coords: [121.47, 31.23], role: "Dünyanın En Büyük Limanı", metric: "29.8M Nüfus", tz: 8, desc: "Konteyner hacminde dünya birincisi, Çin imalat sanayisinin küresel açılış kapısı." },
-            { name: "Singapur", coords: [103.82, 1.35], role: "Global Aktarma & Finans", metric: "5.9M Nüfus", tz: 8, desc: "Malakka Boğazı üzerinde dünya deniz ticaretinin ve serbest pazarın kilit noktası." },
-            { name: "Dubai", coords: [55.27, 25.20], role: "Orta Doğu Lojistik Merkezi", metric: "3.6M Nüfus", tz: 4, desc: "Havacılık, serbest bölgeler ve küresel transit ticaretin modern vahası." },
-            { name: "Londra", coords: [-0.13, 51.51], role: "Küresel Finans Sermayesi", metric: "9.6M Nüfus", tz: 0, desc: "Greenwich meridyeninin kalbi, uluslararası sigorta, denizcilik ve döviz piyasalarının merkezi." },
-            { name: "New York", coords: [-74.01, 40.71], role: "Dünya Sermaye Piyasaları", metric: "19.5M Nüfus", tz: -5, desc: "Wall Street ve küresel sermaye akışının yönlendirildiği dev finans merkezi." },
-            { name: "Frankfurt", coords: [8.68, 50.11], role: "Avrupa Merkez Bankası Üssü", metric: "2.3M Nüfus", tz: 1, desc: "Euro Bölgesi para politikasının ve kıta Avrupası transit demiryolu/hava ağının kalbi." },
-            { name: "Pekin", coords: [116.41, 39.90], role: "Siyasi & Yatırım Merkezi", metric: "21.5M Nüfus", tz: 8, desc: "Kuşak ve Yol Girişimi'nin (BRI) stratejik ve finansal karar merkezi." }
+            { 
+                name_tr: "İstanbul", name_en: "Istanbul", 
+                coords: [28.98, 41.01], 
+                role_tr: "Avrasya Finans & Lojistik", role_en: "Eurasian Finance & Logistics Hub",
+                metric_tr: "15.9M Nüfus", metric_en: "15.9M Pop", tz: 3, 
+                desc_tr: "İki kıtayı birleştiren, tarihi İpek Yolu'nun bitişi ve modern hava/deniz koridorlarının merkez üssü.",
+                desc_en: "Bridging Europe and Asia, historic terminus of the Silk Road and hub of modern air/sea transit."
+            },
+            { 
+                name_tr: "Tokyo", name_en: "Tokyo", 
+                coords: [139.69, 35.69], 
+                role_tr: "Mega Finans & Teknoloji", role_en: "Mega Finance & Tech Capital",
+                metric_tr: "37.4M Nüfus", metric_en: "37.4M Pop", tz: 9, 
+                desc_tr: "Dünyanın en büyük metropol ekonomisi, Asya-Pasifik ticaretinin en köklü başkenti.",
+                desc_en: "World's largest metropolitan economy, powerhouse of Asia-Pacific trade and technology."
+            },
+            { 
+                name_tr: "Şanghay", name_en: "Shanghai", 
+                coords: [121.47, 31.23], 
+                role_tr: "Dünyanın En Büyük Limanı", role_en: "World's Busiest Container Port",
+                metric_tr: "29.8M Nüfus", metric_en: "29.8M Pop", tz: 8, 
+                desc_tr: "Konteyner hacminde dünya birincisi, Çin imalat sanayisinin küresel açılış kapısı.",
+                desc_en: "Global leader in container volume, main commercial gateway of China's industrial belt."
+            },
+            { 
+                name_tr: "Singapur", name_en: "Singapore", 
+                coords: [103.82, 1.35], 
+                role_tr: "Global Aktarma & Finans", role_en: "Global Transshipment & Finance",
+                metric_tr: "5.9M Nüfus", metric_en: "5.9M Pop", tz: 8, 
+                desc_tr: "Malakka Boğazı üzerinde dünya deniz ticaretinin ve serbest pazarın kilit noktası.",
+                desc_en: "Critical maritime chokehold on the Strait of Malacca and leading global financial center."
+            },
+            { 
+                name_tr: "Dubai", name_en: "Dubai", 
+                coords: [55.27, 25.20], 
+                role_tr: "Orta Doğu Lojistik Merkezi", role_en: "Middle East Logistics Center",
+                metric_tr: "3.6M Nüfus", metric_en: "3.6M Pop", tz: 4, 
+                desc_tr: "Havacılık, serbest bölgeler ve küresel transit ticaretin modern vahası.",
+                desc_en: "Global nexus for international trade, aviation, and Middle Eastern financial services."
+            },
+            { 
+                name_tr: "Londra", name_en: "London", 
+                coords: [-0.13, 51.51], 
+                role_tr: "Küresel Finans Sermayesi", role_en: "Global Financial Capital",
+                metric_tr: "9.6M Nüfus", metric_en: "9.6M Pop", tz: 0, 
+                desc_tr: "Greenwich meridyeninin kalbi, uluslararası sigorta, denizcilik ve döviz piyasalarının merkezi.",
+                desc_en: "Heart of the Prime Meridian, global center for foreign exchange, insurance, and maritime law."
+            },
+            { 
+                name_tr: "New York", name_en: "New York", 
+                coords: [-74.01, 40.71], 
+                role_tr: "Dünya Sermaye Piyasaları", role_en: "Global Capital Markets",
+                metric_tr: "19.5M Nüfus", metric_en: "19.5M Pop", tz: -5, 
+                desc_tr: "Wall Street ve küresel sermaye akışının yönlendirildiği dev finans merkezi.",
+                desc_en: "Epicenter of international finance, Wall Street, and world capital allocation."
+            },
+            { 
+                name_tr: "Frankfurt", name_en: "Frankfurt", 
+                coords: [8.68, 50.11], 
+                role_tr: "Avrupa Merkez Bankası Üssü", role_en: "European Central Bank Hub",
+                metric_tr: "2.3M Nüfus", metric_en: "2.3M Pop", tz: 1, 
+                desc_tr: "Euro Bölgesi para politikasının ve kıta Avrupası transit demiryolu/hava ağının kalbi.",
+                desc_en: "Seat of the European Central Bank and core transportation crossroad of Continental Europe."
+            },
+            { 
+                name_tr: "Pekin", name_en: "Beijing", 
+                coords: [116.41, 39.90], 
+                role_tr: "Siyasi & Yatırım Merkezi", role_en: "Political & BRI Investment Hub",
+                metric_tr: "21.5M Nüfus", metric_en: "21.5M Pop", tz: 8, 
+                desc_tr: "Kuşak ve Yol Girişimi'nin (BRI) stratejik ve finansal karar merkezi.",
+                desc_en: "Command center for the Belt and Road Initiative and sovereign wealth investment."
+            }
         ];
 
-        // Modern Deniz Koridorları (Koordinat dizileri)
+        // Modern Deniz Koridorları
         const MARITIME_ROUTES = [
-            // Asya - Avrupa Ana Hattı (Şanghay -> Malakka -> Babülmendep -> Süveyş -> Cebelitarık -> Rotterdam)
             [[121.47, 31.23], [115.0, 15.0], [101.35, 2.50], [80.0, 6.0], [60.0, 12.0], [43.33, 12.58], [32.34, 30.60], [20.0, 36.0], [-5.60, 35.98], [-9.0, 42.0], [4.4, 51.9]],
-            // Trans-Pasifik Hattı (Şanghay/Tokyo -> Los Angeles)
             [[121.47, 31.23], [139.69, 35.69], [170.0, 38.0], [-160.0, 38.0], [-118.24, 34.05]],
-            // Hürmüz Petrol Hattı (Hürmüz -> Doğu Asya)
             [[56.40, 26.56], [65.0, 20.0], [80.0, 6.0], [101.35, 2.50]],
-            // Trans-Atlantik Hattı (Rotterdam -> New York)
             [[4.4, 51.9], [-10.0, 50.0], [-40.0, 45.0], [-74.01, 40.71]],
-            // Panama Koridoru (New York -> Panama -> Şanghay)
             [[-74.01, 40.71], [-75.0, 25.0], [-79.91, 9.10], [-110.0, 10.0], [-150.0, 15.0], [140.0, 20.0], [121.47, 31.23]]
         ];
 
-        // Tarihi İpek Yolu (Kara Ağı)
+        // Tarihi İpek Yolu
         const SILK_ROAD_ROUTES = [
             [[108.94, 34.26], [94.66, 40.14], [75.98, 39.46], [66.97, 39.65], [62.19, 37.60], [51.42, 35.68], [46.29, 38.08], [28.98, 41.01], [12.33, 45.44]],
             [[66.97, 39.65], [60.63, 41.56], [50.0, 45.0], [39.7, 47.2], [28.98, 41.01]]
         ];
 
         // =========================================================================
-        // 2. D3 & SVG KURULUMU
+        // 3. D3 HARİTA VE SVG KURULUMU
         // =========================================================================
         const mapContainer = document.getElementById('map-wrapper');
         let width = mapContainer.clientWidth;
         let height = mapContainer.clientHeight;
-        let currentAngle = -90; // Varsayılan: Doğu-Yukarı
+        let currentAngle = -90; // Varsayılan: Doğu-Yukarı (East-Up)
 
         const svg = d3.select("#map")
             .attr("width", "100%")
             .attr("height", "100%")
             .attr("viewBox", [0, 0, width, height]);
 
-        // Arka Plan Deniz Alanı
         svg.append("rect")
             .attr("width", "100%")
             .attr("height", "100%")
             .attr("fill", "transparent");
 
-        // Ana Taşıyıcı Grup (Zoom & Pan için)
         const mainGroup = svg.append("g").attr("id", "main-group");
 
-        // Döndürülebilir Katman Grubu (Dinamik Yönelim için)
         const rotatableGroup = mainGroup.append("g")
             .attr("id", "rotatable-group")
             .attr("transform", `rotate(${currentAngle}, ${width / 2}, ${height / 2})`);
 
-        // Alt Katman Grupları
+        // Katmanlar
         const graticuleGroup = rotatableGroup.append("g").attr("class", "layer-graticule");
         const countriesGroup = rotatableGroup.append("g").attr("class", "layer-countries");
+        const geolabelsGroup = rotatableGroup.append("g").attr("class", "layer-geolabels");
         const routesGroup = rotatableGroup.append("g").attr("class", "layer-routes");
         const markersGroup = rotatableGroup.append("g").attr("class", "layer-markers");
 
-        // Projeksiyon (Natural Earth)
         const projection = d3.geoNaturalEarth1()
             .scale(width / 5.2)
             .center([0, 0])
@@ -833,30 +1130,29 @@
 
         const pathGenerator = d3.geoPath().projection(projection);
 
-        // Zoom & Pan Davranışı
         const zoomBehavior = d3.zoom()
-            .scaleExtent([0.9, 12])
+            .scaleExtent([0.9, 14])
             .on("zoom", (event) => {
                 mainGroup.attr("transform", event.transform);
                 const k = event.transform.k;
                 
-                // Ölçek değiştikçe çizgi kalınlıklarını ve metin boyutlarını orantıla
                 countriesGroup.selectAll(".country").attr("stroke-width", 0.5 / k);
                 routesGroup.selectAll("path").attr("stroke-width", d => (d.silk ? 1.8 : 1.5) / k);
                 markersGroup.selectAll(".city-marker circle").attr("r", 3.5 / k);
                 markersGroup.selectAll(".chokepoint-marker circle").attr("r", 4.5 / k);
                 markersGroup.selectAll(".city-label").style("font-size", `${10 / Math.pow(k, 0.4)}px`);
                 markersGroup.selectAll(".chokepoint-label").style("font-size", `${9 / Math.pow(k, 0.4)}px`);
+                geolabelsGroup.selectAll(".continent-label").style("font-size", `${14 / Math.pow(k, 0.3)}px`);
+                geolabelsGroup.selectAll(".ocean-label").style("font-size", `${13 / Math.pow(k, 0.3)}px`);
             });
 
         svg.call(zoomBehavior);
-        svg.on("dblclick.zoom", null); // Çift tıklama zoom'unu engelle
+        svg.on("dblclick.zoom", null);
 
         // =========================================================================
-        // 3. VERİLERİ HARİTAYA ÇİZME
+        // 4. VERİ ÇİZİMİ VE ETİKETLEME
         // =========================================================================
         d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then(world => {
-            // Yükleme ekranını kaldır
             const loader = document.getElementById('loader');
             loader.style.opacity = '0';
             setTimeout(() => loader.remove(), 600);
@@ -877,26 +1173,47 @@
                 .attr("class", "country")
                 .attr("d", pathGenerator);
 
-            // 3. Rotalar
-            // Modern Deniz Koridorları
+            // 3. Kıta ve Okyanus İsimleri (Görkemli ve Okunaklı)
+            OCEANS.forEach(ocean => {
+                const pt = projection(ocean.coords);
+                if (!pt) return;
+                geolabelsGroup.append("text")
+                    .attr("class", "ocean-label")
+                    .attr("x", pt[0])
+                    .attr("y", pt[1])
+                    .attr("data-tr", ocean.name_tr)
+                    .attr("data-en", ocean.name_en)
+                    .text(currentLang === 'en' ? ocean.name_en : ocean.name_tr);
+            });
+
+            CONTINENTS.forEach(cont => {
+                const pt = projection(cont.coords);
+                if (!pt) return;
+                geolabelsGroup.append("text")
+                    .attr("class", "continent-label")
+                    .attr("x", pt[0])
+                    .attr("y", pt[1])
+                    .attr("data-tr", cont.name_tr)
+                    .attr("data-en", cont.name_en)
+                    .text(currentLang === 'en' ? cont.name_en : cont.name_tr);
+            });
+
+            // 4. Rotalar
             MARITIME_ROUTES.forEach(coords => {
-                const geoLine = { type: "LineString", coordinates: coords, silk: false };
                 routesGroup.append("path")
-                    .datum(geoLine)
+                    .datum({ type: "LineString", coordinates: coords, silk: false })
                     .attr("class", "route-maritime")
                     .attr("d", pathGenerator);
             });
 
-            // Tarihi İpek Yolu
             SILK_ROAD_ROUTES.forEach(coords => {
-                const geoLine = { type: "LineString", coordinates: coords, silk: true };
                 routesGroup.append("path")
-                    .datum(geoLine)
+                    .datum({ type: "LineString", coordinates: coords, silk: true })
                     .attr("class", "route-silk")
                     .attr("d", pathGenerator);
             });
 
-            // 4. Stratejik Boğazlar (Chokepoints)
+            // 5. Stratejik Boğazlar
             CHOKEPOINTS.forEach(choke => {
                 const pt = projection(choke.coords);
                 if (!pt) return;
@@ -906,32 +1223,30 @@
                     .attr("transform", `translate(${pt[0]}, ${pt[1]})`)
                     .on("click", (e) => {
                         e.stopPropagation();
-                        showDetailCard(choke, "Stratejik Boğaz / Kanal");
+                        showDetailCard(choke, "chokepoint");
                     });
 
-                // Dış puls halkası
                 gChoke.append("circle")
                     .attr("r", 7)
                     .attr("fill", "rgba(244, 63, 94, 0.25)")
                     .attr("stroke", "var(--accent-rose)")
                     .attr("stroke-width", 0.8);
 
-                // İç nokta
                 gChoke.append("circle")
                     .attr("r", 4.5)
                     .attr("fill", "var(--accent-rose)");
 
-                // Başlık
                 gChoke.append("text")
                     .attr("class", "chokepoint-label")
                     .attr("x", 8)
                     .attr("y", 3)
-                    // Harita açısına göre ters çevirme (yazıların dik kalması için)
                     .attr("transform", `rotate(${-currentAngle})`)
-                    .text(choke.name);
+                    .attr("data-tr", choke.name_tr)
+                    .attr("data-en", choke.name_en)
+                    .text(currentLang === 'en' ? choke.name_en : choke.name_tr);
             });
 
-            // 5. Global Finans ve Mega Şehirler
+            // 6. Küresel Finans Merkezleri
             GLOBAL_HUBS.forEach(city => {
                 const pt = projection(city.coords);
                 if (!pt) return;
@@ -941,7 +1256,7 @@
                     .attr("transform", `translate(${pt[0]}, ${pt[1]})`)
                     .on("click", (e) => {
                         e.stopPropagation();
-                        showDetailCard(city, "Küresel Hub & Finans Merkezi");
+                        showDetailCard(city, "city");
                     });
 
                 gCity.append("circle")
@@ -955,35 +1270,44 @@
                     .attr("x", 6)
                     .attr("y", 3)
                     .attr("transform", `rotate(${-currentAngle})`)
-                    .text(city.name);
+                    .attr("data-tr", city.name_tr)
+                    .attr("data-en", city.name_en)
+                    .text(currentLang === 'en' ? city.name_en : city.name_tr);
             });
+
+            // Başlangıç dilini uygula
+            switchLanguage(currentLang);
         });
 
+        function updateMapLabels() {
+            const isEn = currentLang === 'en';
+            d3.selectAll(".continent-label, .ocean-label, .chokepoint-label, .city-label").each(function() {
+                const el = d3.select(this);
+                const txt = isEn ? el.attr("data-en") : el.attr("data-tr");
+                if (txt) el.text(txt);
+            });
+        }
+
         // =========================================================================
-        // 4. DİNAMİK YÖNELİM (ORIENTATION ENGINE) & PUSULA
+        // 5. DİNAMİK YÖNELİM VE PUSULA
         // =========================================================================
         function setOrientation(angle) {
             currentAngle = angle;
 
-            // Harita grubunu pürüzsüzce döndür
             rotatableGroup.transition()
                 .duration(1000)
                 .ease(d3.easeCubicOut)
                 .attr("transform", `rotate(${currentAngle}, ${width / 2}, ${height / 2})`);
 
-            // Şehir ve boğaz yazılarının okunaklı kalması için ters rotasyon uygula
+            // Şehir, boğaz ve kıta yazılarının dik durması için ters açı
             markersGroup.selectAll(".city-label, .chokepoint-label")
                 .transition()
                 .duration(1000)
                 .ease(d3.easeCubicOut)
                 .attr("transform", `rotate(${-currentAngle})`);
 
-            // Pusula ibresini döndür (Haritadaki Kuzey'i işaret etmesi için)
-            // Doğu yukarı (-90) iken Kuzey solda (-90deg), Kuzey yukarıda (0) iken Kuzey yukarıda (0deg)
-            const compassAngle = angle;
-            document.getElementById('compass-dial').style.transform = `rotate(${compassAngle}deg)`;
+            document.getElementById('compass-dial').style.transform = `rotate(${angle}deg)`;
 
-            // Buton aktiflik durumlarını güncelle
             document.querySelectorAll('.pill-btn').forEach(btn => {
                 if (parseInt(btn.getAttribute('data-angle')) === angle) {
                     btn.classList.add('active');
@@ -993,7 +1317,6 @@
             });
         }
 
-        // Yön butonları olayları
         document.querySelectorAll('.pill-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const angle = parseInt(btn.getAttribute('data-angle'));
@@ -1001,7 +1324,6 @@
             });
         });
 
-        // Pusula kartına tıklandığında bir sonraki yöne dön
         document.getElementById('compass-card').addEventListener('click', () => {
             const angles = [-90, 0, 180, 90];
             let nextIndex = (angles.indexOf(currentAngle) + 1) % angles.length;
@@ -1009,45 +1331,48 @@
         });
 
         // =========================================================================
-        // 5. DETAY BİLGİ KARTI & SAAT HESABI
+        // 6. DETAY BİLGİ KARTI
         // =========================================================================
         const infoCard = document.getElementById('info-card');
         document.getElementById('info-close').addEventListener('click', () => {
             infoCard.style.display = 'none';
         });
 
-        function showDetailCard(data, type) {
-            document.getElementById('info-title').innerText = data.name;
-            document.getElementById('info-type').innerText = type;
-            document.getElementById('info-desc').innerText = data.desc;
-            document.getElementById('stat-coords').innerText = `${data.coords[1].toFixed(2)}° N, ${data.coords[0].toFixed(2)}° E`;
-            document.getElementById('stat-role').innerText = data.role;
-            document.getElementById('stat-metric').innerText = data.traffic || data.metric || 'N/A';
+        function showDetailCard(data, category) {
+            const isEn = currentLang === 'en';
+            const title = isEn ? data.name_en : data.name_tr;
+            const desc = isEn ? data.desc_en : data.desc_tr;
+            const role = isEn ? data.role_en : data.role_tr;
+            const metric = isEn ? (data.traffic_en || data.metric_en) : (data.traffic_tr || data.metric_tr);
+            const tag = category === 'chokepoint' 
+                ? (isEn ? 'Strategic Chokepoint' : 'Stratejik Boğaz / Kanal')
+                : (isEn ? 'Global Financial Hub' : 'Küresel Finans Merkezi');
 
-            // Canlı yerel saat hesabı (UTC offset)
+            document.getElementById('info-title').innerText = title;
+            document.getElementById('info-type').innerText = tag;
+            document.getElementById('info-desc').innerText = desc;
+            document.getElementById('stat-coords').innerText = `${data.coords[1].toFixed(2)}° N, ${data.coords[0].toFixed(2)}° E`;
+            document.getElementById('stat-role').innerText = role;
+            document.getElementById('stat-metric').innerText = metric || 'N/A';
+
             if (data.tz !== undefined) {
                 const now = new Date();
                 const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
                 const localDate = new Date(utc + (3600000 * data.tz));
                 document.getElementById('stat-time').innerText = localDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ` (UTC${data.tz >= 0 ? '+' : ''}${data.tz})`;
             } else {
-                document.getElementById('stat-time').innerText = 'UTC Bilgisi Yok';
+                document.getElementById('stat-time').innerText = 'UTC N/A';
             }
 
             infoCard.style.display = 'block';
         }
 
         // =========================================================================
-        // 6. ARAMA VE FLY-TO (ODAKLANMA)
+        // 7. ARAMA VE FLY-TO
         // =========================================================================
         const searchInput = document.getElementById('search-input');
         const searchResults = document.getElementById('search-results');
         const searchClear = document.getElementById('search-clear');
-
-        const ALL_SEARCHABLE = [
-            ...CHOKEPOINTS.map(c => ({ ...c, category: "Boğaz / Kanal" })),
-            ...GLOBAL_HUBS.map(h => ({ ...h, category: "Finans Merkezi" }))
-        ];
 
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.trim().toLowerCase();
@@ -1058,14 +1383,34 @@
             }
 
             searchClear.style.display = 'block';
-            const matched = ALL_SEARCHABLE.filter(item => item.name.toLowerCase().includes(query));
+            const isEn = currentLang === 'en';
+            
+            const allItems = [
+                ...CHOKEPOINTS.map(c => ({ 
+                    ...c, 
+                    display_name: isEn ? c.name_en : c.name_tr,
+                    category: isEn ? 'Chokepoint' : 'Boğaz / Kanal',
+                    rawCategory: 'chokepoint'
+                })),
+                ...GLOBAL_HUBS.map(h => ({ 
+                    ...h, 
+                    display_name: isEn ? h.name_en : h.name_tr,
+                    category: isEn ? 'Financial Hub' : 'Finans Merkezi',
+                    rawCategory: 'city'
+                }))
+            ];
+
+            const matched = allItems.filter(item => 
+                (item.name_tr && item.name_tr.toLowerCase().includes(query)) ||
+                (item.name_en && item.name_en.toLowerCase().includes(query))
+            );
 
             if (matched.length === 0) {
-                searchResults.innerHTML = `<div style="padding: 8px; font-size: 0.8rem; color: var(--text-muted);">Eşleşen konum bulunamadı</div>`;
+                searchResults.innerHTML = `<div style="padding: 8px; font-size: 0.8rem; color: var(--text-muted);">${I18N[currentLang].noMatch}</div>`;
             } else {
                 searchResults.innerHTML = matched.map(item => `
-                    <div class="search-item" data-id="${item.name}">
-                        <span><strong>${item.name}</strong></span>
+                    <div class="search-item" data-id="${item.display_name}">
+                        <span><strong>${item.display_name}</strong></span>
                         <span style="font-size: 0.7rem; color: var(--accent-cyan);">${item.category}</span>
                     </div>
                 `).join('');
@@ -1073,12 +1418,12 @@
                 searchResults.querySelectorAll('.search-item').forEach(el => {
                     el.addEventListener('click', () => {
                         const targetName = el.getAttribute('data-id');
-                        const targetObj = ALL_SEARCHABLE.find(i => i.name === targetName);
+                        const targetObj = allItems.find(i => i.display_name === targetName);
                         if (targetObj) {
                             flyTo(targetObj.coords);
-                            showDetailCard(targetObj, targetObj.category);
+                            showDetailCard(targetObj, targetObj.rawCategory);
                             searchResults.style.display = 'none';
-                            searchInput.value = targetObj.name;
+                            searchInput.value = targetObj.display_name;
                         }
                     });
                 });
@@ -1096,18 +1441,14 @@
             const pt = projection(coords);
             if (!pt) return;
 
-            // Hedef noktayı merkeze getirmek için transform hesabı
             const scale = 3.5;
-            // Açı rotasyonunu hesaba kat
             const rad = currentAngle * Math.PI / 180;
             const cx = width / 2;
             const cy = height / 2;
             
-            // Merkezden fark
             const dx = pt[0] - cx;
             const dy = pt[1] - cy;
             
-            // Döndürülmüş koordinat
             const rotatedX = cx + (dx * Math.cos(rad) - dy * Math.sin(rad));
             const rotatedY = cy + (dx * Math.sin(rad) + dy * Math.cos(rad));
 
@@ -1121,7 +1462,7 @@
         }
 
         // =========================================================================
-        // 7. KATMAN AÇ / KAPA (TOGGLES)
+        // 8. KATMAN FİLTRELERİ
         // =========================================================================
         document.getElementById('layer-chokepoints').addEventListener('change', (e) => {
             markersGroup.selectAll('.chokepoint-marker').style('display', e.target.checked ? null : 'none');
@@ -1139,12 +1480,16 @@
             markersGroup.selectAll('.city-marker').style('display', e.target.checked ? null : 'none');
         });
 
+        document.getElementById('layer-geolabels').addEventListener('change', (e) => {
+            geolabelsGroup.style('display', e.target.checked ? null : 'none');
+        });
+
         document.getElementById('layer-graticule').addEventListener('change', (e) => {
             graticuleGroup.style('display', e.target.checked ? null : 'none');
         });
 
         // =========================================================================
-        // 8. TEMA DEĞİŞTİRİCİ (MODERN DARK / LIGHT / VINTAGE)
+        // 9. TEMA DEĞİŞTİRİCİ (DARK / LIGHT / VINTAGE)
         // =========================================================================
         const themes = ["dark", "light", "vintage"];
         let currentThemeIndex = 0;
@@ -1164,7 +1509,7 @@
         });
 
         // =========================================================================
-        // 9. ZOOM & SIFIRLAMA BUTONLARI
+        // 10. ZOOM & SIFIRLAMA BUTONLARI
         // =========================================================================
         document.getElementById('btn-zoom-in').addEventListener('click', () => {
             svg.transition().duration(400).call(zoomBehavior.scaleBy, 1.4);
@@ -1180,7 +1525,6 @@
             infoCard.style.display = 'none';
         });
 
-        // Pencere Boyut Değişikliği
         window.addEventListener('resize', () => {
             width = mapContainer.clientWidth;
             height = mapContainer.clientHeight;
