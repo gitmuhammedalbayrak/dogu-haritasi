@@ -36,8 +36,8 @@
             --route-maritime: #38bdf8;
             --route-silk: #f59e0b;
             --glow: 0 0 15px rgba(56, 189, 248, 0.35);
-            --continent-color: rgba(248, 250, 252, 0.28);
-            --ocean-color: rgba(56, 189, 248, 0.22);
+            --continent-color: rgba(248, 250, 252, 0.75);
+            --ocean-color: rgba(56, 189, 248, 0.55);
         }
 
         :root[data-theme="light"] {
@@ -59,8 +59,8 @@
             --route-maritime: #0284c7;
             --route-silk: #d97706;
             --glow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            --continent-color: rgba(15, 23, 42, 0.25);
-            --ocean-color: rgba(2, 132, 199, 0.22);
+            --continent-color: rgba(15, 23, 42, 0.70);
+            --ocean-color: rgba(2, 132, 199, 0.55);
         }
 
         :root[data-theme="vintage"] {
@@ -82,8 +82,8 @@
             --route-maritime: #1d4e89;
             --route-silk: #8b0000;
             --glow: 0 4px 15px rgba(93, 64, 55, 0.15);
-            --continent-color: rgba(93, 64, 55, 0.35);
-            --ocean-color: rgba(29, 78, 137, 0.25);
+            --continent-color: rgba(93, 64, 55, 0.80);
+            --ocean-color: rgba(29, 78, 137, 0.60);
         }
 
         * {
@@ -146,13 +146,18 @@
         /* Continents & Oceans */
         .continent-label {
             font-family: 'Cinzel Decorative', 'Plus Jakarta Sans', serif;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 900;
             fill: var(--continent-color);
-            letter-spacing: 4px;
+            letter-spacing: 5px;
             text-anchor: middle;
+            dominant-baseline: central;
             pointer-events: none;
             text-transform: uppercase;
+            paint-order: stroke fill;
+            stroke: var(--land-fill);
+            stroke-width: 2.5px;
+            stroke-linejoin: round;
         }
 
         .ocean-label {
@@ -161,10 +166,15 @@
             font-weight: 700;
             font-style: italic;
             fill: var(--ocean-color);
-            letter-spacing: 5px;
+            letter-spacing: 6px;
             text-anchor: middle;
+            dominant-baseline: central;
             pointer-events: none;
             text-transform: uppercase;
+            paint-order: stroke fill;
+            stroke: var(--bg-ocean);
+            stroke-width: 2px;
+            stroke-linejoin: round;
         }
 
         /* Trade Routes */
@@ -1173,14 +1183,17 @@
                 .attr("class", "country")
                 .attr("d", pathGenerator);
 
-            // 3. Kıta ve Okyanus İsimleri (Görkemli ve Okunaklı)
+            // 3. Kıta ve Okyanus İsimleri (Görkemli, Okunaklı ve Dönebilen)
             OCEANS.forEach(ocean => {
                 const pt = projection(ocean.coords);
                 if (!pt) return;
-                geolabelsGroup.append("text")
+                const gOcean = geolabelsGroup.append("g")
+                    .attr("class", "ocean-item")
+                    .attr("transform", `translate(${pt[0]}, ${pt[1]})`);
+
+                gOcean.append("text")
                     .attr("class", "ocean-label")
-                    .attr("x", pt[0])
-                    .attr("y", pt[1])
+                    .attr("transform", `rotate(${-currentAngle})`)
                     .attr("data-tr", ocean.name_tr)
                     .attr("data-en", ocean.name_en)
                     .text(currentLang === 'en' ? ocean.name_en : ocean.name_tr);
@@ -1189,10 +1202,13 @@
             CONTINENTS.forEach(cont => {
                 const pt = projection(cont.coords);
                 if (!pt) return;
-                geolabelsGroup.append("text")
+                const gCont = geolabelsGroup.append("g")
+                    .attr("class", "continent-item")
+                    .attr("transform", `translate(${pt[0]}, ${pt[1]})`);
+
+                gCont.append("text")
                     .attr("class", "continent-label")
-                    .attr("x", pt[0])
-                    .attr("y", pt[1])
+                    .attr("transform", `rotate(${-currentAngle})`)
                     .attr("data-tr", cont.name_tr)
                     .attr("data-en", cont.name_en)
                     .text(currentLang === 'en' ? cont.name_en : cont.name_tr);
@@ -1299,8 +1315,14 @@
                 .ease(d3.easeCubicOut)
                 .attr("transform", `rotate(${currentAngle}, ${width / 2}, ${height / 2})`);
 
-            // Şehir, boğaz ve kıta yazılarının dik durması için ters açı
+            // Şehir, boğaz, kıta ve okyanus yazılarının dik durması için ters açı
             markersGroup.selectAll(".city-label, .chokepoint-label")
+                .transition()
+                .duration(1000)
+                .ease(d3.easeCubicOut)
+                .attr("transform", `rotate(${-currentAngle})`);
+
+            geolabelsGroup.selectAll(".continent-label, .ocean-label")
                 .transition()
                 .duration(1000)
                 .ease(d3.easeCubicOut)
